@@ -2,7 +2,6 @@ package org.example.springappportfolio.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
@@ -17,8 +16,7 @@ public class User {
     @Column(name = "user_id", nullable = false)
     private Integer id;
 
-    @Lob
-    @Column(name = "user_image")
+    @Column(name = "user_image", columnDefinition = "BYTEA")
     private byte[] userImage;
 
     @Column(name = "username", nullable = false, length = 100)

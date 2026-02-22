@@ -19,7 +19,7 @@ public class ProjectImage {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
-    @Column(name = "image_data", nullable = false)
+    @Column(name = "image_data", nullable = false, columnDefinition = "BYTEA")
     private byte[] imageData;
 
     @Column(name = "image_format", nullable = false, length = 63)

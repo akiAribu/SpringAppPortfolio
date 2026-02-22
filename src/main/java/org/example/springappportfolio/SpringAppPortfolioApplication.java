@@ -7,7 +7,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class SpringAppPortfolioApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SpringAppPortfolioApplication.class, args);
+        try {
+            SpringApplication.run(SpringAppPortfolioApplication.class, args);
+        }
+        catch (Throwable t) {
+            t.printStackTrace();
+            throw t;
+        }
     }
 
 }

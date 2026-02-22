@@ -23,6 +23,6 @@ public class Tag {
     private String tagType;
 
     @OneToMany(mappedBy = "tag")
-    private Set<TagInProject> project = new LinkedHashSet<>();
+    private Set<TagInProject> projects = new LinkedHashSet<>();
 
 }

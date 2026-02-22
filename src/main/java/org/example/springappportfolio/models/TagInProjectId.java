@@ -11,9 +11,9 @@ import java.io.Serializable;
 public class TagInProjectId implements Serializable {
 
     @Column(name = "project_id")
-    private String projectId;
+    private Integer projectId;
 
     @Column(name = "tag_id")
-    private String tagId;
+    private Integer tagId;
 
 }

@@ -1,0 +1,6 @@
+target/
+.idea/
+*.log
+data/
+.git
+README.md

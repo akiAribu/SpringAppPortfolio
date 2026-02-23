@@ -1,10 +1,10 @@
 package org.example.springappportfolio.repositories;
 
-import org.example.springappportfolio.models.Tag;
+import org.example.springappportfolio.models.Project;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TagRepository extends JpaRepository<Tag, Long> {
-    Tag findByTagName(String tagName);
+public interface ProjectRepository extends JpaRepository<Project, Long> {
+
 }

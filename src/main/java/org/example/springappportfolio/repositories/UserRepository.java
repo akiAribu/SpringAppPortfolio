@@ -1,14 +1,17 @@
 package org.example.springappportfolio.repositories;
 
-import java.util.List;
+import java.util.Optional;
+
 import org.example.springappportfolio.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-@Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    List<User> findByUsername(String username);
+    Optional<User> findByUsername(String username);
+    Optional<User> findByEmail(String email);
 
-    User findUserById(Long id);
+    @Query("SELECT u FROM User u WHERE u.username = :login OR u.email = :login")
+    Optional<User> findByUsernameOrEmail(@Param("login") String login);
 }

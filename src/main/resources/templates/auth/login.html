@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login</title>
+</head>
+<body>
+
+<h2>Login</h2>
+
+<!-- Ошибка из контроллера -->
+<div th:if="${errors}" th:text="${errors}" style="color:red"></div>
+
+<!-- Logout сообщение -->
+<div th:if="${param.logout}">You have been logged out</div>
+
+<form method="post" th:action="@{/login}">
+
+    <!-- ВАЖНО: соответствует LoginRequest.usernameOrEmail -->
+    <input type="text"
+           name="usernameOrEmail"
+           placeholder="Username or Email"
+           required/>
+    <br/>
+
+    <!-- ВАЖНО: соответствует LoginRequest.password -->
+    <input type="password"
+           name="password"
+           placeholder="Password"
+           required/>
+    <br/>
+
+<!--    &lt;!&ndash; CSRF (если Spring Security включён) &ndash;&gt;-->
+<!--    <input type="hidden"-->
+<!--           th:if="${_csrf != null}"-->
+<!--           th:name="${_csrf.parameterName}"-->
+<!--           th:value="${_csrf.token}" />-->
+
+    <button type="submit">Login</button>
+</form>
+
+<a href="/register">Register</a>
+
+</body>
+</html>

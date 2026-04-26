@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Profile</title>
+</head>
+<body>
+
+<h2>Profile Page</h2>
+
+<div th:if="${user != null}">
+    <p><strong>User ID: </strong><span th:text="${user.userId}"></span></p>
+    <p><strong>Username: </strong><span th:text="${user.username}"></span></p>
+    <p><strong>Email: </strong><span th:text="${user.email}"></span></p>
+    <p><strong>Role: </strong><span th:text="${user.role}"></span></p>
+    <p><strong>Registered: </strong><span th:text="${user.createdAt}"></span></p>
+</div>
+
+<div th:if="${user == null}">
+    <p style="color: red">User not found</p>
+</div>
+
+<a href="/logout">Logout</a>
+
+</body>
+</html>

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 
 import java.time.Instant;
 
@@ -23,8 +24,12 @@ public class User {
     private Long id;
 
     @Lob
+    @JdbcTypeCode(java.sql.Types.BINARY)
     @Column(name = "user_image", columnDefinition = "BYTEA")
     private byte[] userImage;
+
+    @Column(name = "image_type")
+    private String imageType;
 
     @Column(name = "username", nullable = false, length = 100)
     private String username;
@@ -47,7 +52,7 @@ public class User {
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Portfolio portfolio;
 
 }

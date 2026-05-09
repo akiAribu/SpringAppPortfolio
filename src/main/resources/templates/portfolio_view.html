@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Portfolio</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h2>Portfolio</h2>
+<a href="/profile">My Profile</a>
+<br><br>
+
+<div th:if="${portfolio != null}">
+    <h3>User</h3>
+    <p><b>Username:</b> <span th:text="${portfolio.username}"></span></p>
+
+    <h3>Avatar</h3>
+    <img id="avatar" th:src="'/api/v1/users/' + ${portfolio.userId} + '/avatar'"
+         style="width:150px;height:150px;border-radius:50%"
+         onerror="this.src='/api/v1/users/me/avatar'"/>
+
+    <h3>Contacts</h3>
+    <div id="contactsContainer">
+        <div th:each="contact : ${portfolio.contacts}">
+            <p>
+                <b th:text="${contact.contactType}"></b>:
+                <span th:text="${contact.contactValue}"></span>
+            </p>
+        </div>
+        <p th:if="${#lists.isEmpty(portfolio.contacts)}">No contacts</p>
+    </div>
+
+<!--    <div th:if="${not #lists.isEmpty(portfolio.projects)}">-->
+<!--        <h3>Projects</h3>-->
+<!--        <div th:each="project : ${portfolio.projects}">-->
+<!--            <div style="border:1px solid #ccc; margin:10px; padding:10px;">-->
+<!--                <h4 th:text="${project.projectTitle}"></h4>-->
+<!--                <p th:text="${project.shortDescription}"></p>-->
+<!--                <a th:href="${project.projectLink}" th:if="${project.projectLink}" target="_blank">View Project</a>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+
+    <p><b>Public:</b> <span th:text="${portfolio.isPublic ? 'Yes' : 'No'}"></span></p>
+    <p><b>Views:</b> <span th:text="${portfolio.viewsCount}"></span></p>
+</div>
+
+<div th:if="${error}">
+    <p style="color:red;" th:text="${error}"></p>
+</div>
+
+</body>
+</html>

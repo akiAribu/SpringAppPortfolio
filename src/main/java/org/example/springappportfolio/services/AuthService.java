@@ -1,12 +1,14 @@
 package org.example.springappportfolio.services;
 
 import lombok.RequiredArgsConstructor;
+import org.example.springappportfolio.config.UserPrincipal;
 import org.example.springappportfolio.dto.AuthResponse;
 import org.example.springappportfolio.dto.LoginRequest;
 import org.example.springappportfolio.dto.RegisterRequest;
 import org.example.springappportfolio.exceptions.auth.EmailAlreadyExistsException;
 import org.example.springappportfolio.exceptions.auth.InvalidCredentialsException;
 import org.example.springappportfolio.exceptions.auth.UsernameAlreadyExistsException;
+import org.example.springappportfolio.models.Portfolio;
 import org.example.springappportfolio.models.User;
 import org.example.springappportfolio.models.UserRole;
 import org.example.springappportfolio.repositories.UserRepository;
@@ -18,6 +20,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -43,18 +46,26 @@ public class AuthService {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .userPassword(passwordEncoder.encode(request.getPassword()))
-                .userRole(UserRole.USER)
+                .userRole(UserRole.ROLE_USER)
                 .build();
 
+        Portfolio portfolio = new Portfolio();
+        portfolio.setUser(user);
+        portfolio.setViewsCount(0);
+
+        user.setPortfolio(portfolio);
         userRepository.save(user);
 
-        return AuthResponse.builder()
-                .userId(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .role(user.getUserRole())
-                .message("Registration successful")
-                .build();
+        return new AuthResponse (
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getUserRole(),
+                user.getCreatedAt(),
+                "Registration successful"
+
+        );
+
     }
 
     @Transactional
@@ -69,30 +80,21 @@ public class AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        User user = userRepository.findByUsername(request.getUsernameOrEmail())
-                .or(() -> userRepository.findByEmail(request.getUsernameOrEmail()))
-                .orElseThrow(() -> new InvalidCredentialsException());
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
 
-        return mapToAuthResponse(user, "Login successful");
+        UserRole role = userRepository.findById(principal.getId())
+                .map(User::getUserRole)
+                .orElseThrow(InvalidCredentialsException::new);
+
+        return new AuthResponse(
+                principal.getId(),
+                principal.getUsername(),
+                null,
+                role,
+                null,
+                "Login Successful"
+        );
+
     }
 
-    @Transactional(readOnly = true)
-    public AuthResponse getCurrentUser(String username) {
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        return mapToAuthResponse(user, null);
-    }
-
-    private AuthResponse mapToAuthResponse(User user, String message) {
-        return AuthResponse.builder()
-                .userId(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .role(user.getUserRole())
-                .createdAt(user.getCreatedAt())
-                .message(message)
-                .build();
-    }
 }

@@ -1,6 +1,7 @@
 package org.example.springappportfolio.services;
 
 import lombok.RequiredArgsConstructor;
+import org.example.springappportfolio.config.UserPrincipal;
 import org.example.springappportfolio.models.User;
 import org.example.springappportfolio.repositories.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,7 +23,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByUsernameOrEmail(usernameOrEmail)
                 .orElseThrow( () -> new UsernameNotFoundException("User not found with username: " + usernameOrEmail) );
 
-        return new org.springframework.security.core.userdetails.User(
+        return new UserPrincipal(
+                user.getId(),
                 user.getUsername(),
                 user.getUserPassword(),
                 List.of(new SimpleGrantedAuthority(user.getUserRole().name()))

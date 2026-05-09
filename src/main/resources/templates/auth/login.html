@@ -8,7 +8,9 @@
 <h2>Login</h2>
 
 <!-- Ошибка из контроллера -->
-<div th:if="${errors}" th:text="${errors}" style="color:red"></div>
+<div th:if="${param.error}" style="color:red">
+    Invalid username and password
+</div>
 
 <!-- Logout сообщение -->
 <div th:if="${param.logout}">You have been logged out</div>

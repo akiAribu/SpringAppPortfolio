@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Edit Profile</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<h2>Edit Profile</h2>
+
+<input type="text" id="username" th:value="${user.username}"/>
+<br><br>
+
+<input type="email" id="email" th:value="${user.email}"/>
+<br><br>
+
+<button onclick="updateProfile()">Save</button>
+
+<p id="result"></p>
+
+<br>
+<a href="/profile">Back</a>
+
+<script>
+    function updateProfile() {
+
+        const data = {
+            username: $("#username").val(),
+            email: $("#email").val()
+        };
+
+        $.ajax({
+            url: "/api/v1/users/me",
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+
+            success: function () {
+                $("#result").text("Profile updated");
+            },
+
+            error: function (err) {
+                $("#result").text(err.responseText);
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

@@ -42,14 +42,13 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!--Security-->
+        <!-- Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
-            <version>3.2.1</version>
         </dependency>
 
-        <!--Thymeleaf + Security Integration-->
+        <!-- Thymeleaf Security (для Spring Security 6+) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>

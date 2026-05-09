@@ -2,24 +2,250 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Profile</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-
 <h2>Profile Page</h2>
+<a href="/profile/edit">Edit profile</a>
+<br><br>
 
-<div th:if="${user != null}">
-    <p><strong>User ID: </strong><span th:text="${user.userId}"></span></p>
-    <p><strong>Username: </strong><span th:text="${user.username}"></span></p>
-    <p><strong>Email: </strong><span th:text="${user.email}"></span></p>
-    <p><strong>Role: </strong><span th:text="${user.role}"></span></p>
-    <p><strong>Registered: </strong><span th:text="${user.createdAt}"></span></p>
+<div th:if="${isOwner}">
+    <button onclick="togglePortfolioVisibility()">
+        Make Portfolio <span th:text="${portfolio.isPublic ? 'Private' : 'Public'}"></span>
+    </button>
+    <p id="visibilityResult"></p>
+    <hr>
 </div>
 
-<div th:if="${user == null}">
-    <p style="color: red">User not found</p>
+<h3>Avatar</h3>
+<img id="avatar" src="/api/v1/users/me/avatar"
+     style="width:150px;height:150px;border-radius:50%"/>
+<br><br>
+
+<div th:if="${isOwner}">
+    <input type="file" id="avatarInput"/>
+    <button onclick="uploadAvatar()">Upload</button>
 </div>
 
-<a href="/logout">Logout</a>
+<hr>
+
+<div th:if="${portfolio != null}">
+    <p><b>Username:</b> <span th:text="${portfolio.username}"></span></p>
+    <p><b>Email:</b> <span th:text="${portfolio.email}"></span></p>
+    <p><b>Public:</b> <span th:text="${portfolio.isPublic ? 'Yes' : 'No'}"></span></p>
+    <p><b>Views:</b> <span th:text="${portfolio.viewsCount}"></span></p>
+</div>
+
+<hr>
+
+<h3>Contacts</h3>
+<div id="contactsContainer"></div>
+<p id="contactsEmpty" style="display:none;">Пусто</p>
+
+<div th:if="${isOwner}">
+    <h3>Add Contacts</h3>
+    <input type="text" id="contactType" placeholder="Contact Type"/>
+    <br><br>
+    <input type="text" id="contactValue" placeholder="Contact value"/>
+    <br><br>
+    <button onclick="createContact()">
+        Add Contact
+    </button>
+    <p id="contactResult"></p>
+</div>
+
+<hr>
+
+<div th:if="${isOwner}">
+    <h3>Change Password</h3>
+    <input type="password" id="oldPassword" placeholder="Old Password"/>
+    <br><br>
+    <input type="password" id="newPassword" placeholder="New Password"/>
+    <br><br>
+    <input type="password" id="confirmPassword" placeholder="Confirm Password"/>
+    <br><br>
+    <button onclick="changePassword()">Change Password</button>
+    <p id="passwordResult"></p>
+
+    <hr>
+</div>
+
+<div th:if="${isOwner}">
+    <a href="/logout">Logout</a>
+</div>
+
+<script>
+    function togglePortfolioVisibility() {
+        const currentPublic = [[${portfolio.isPublic}]];
+        const newPublic = !currentPublic;
+
+        $.ajax({
+            url: "/api/v1/portfolios/me",
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify({isPublic: newPublic}),
+
+            success: function () {
+                location.reload();
+            },
+
+            error: function (err) {
+                $("#visibilityResult").text(err.responseText);
+            }
+        })
+    }
+
+    function changePassword() {
+        const data = {
+            oldPassword: $("#oldPassword").val(),
+            newPassword: $("#newPassword").val(),
+            confirmPassword: $("#confirmPassword").val()
+        };
+
+        $.ajax({
+            url: "/api/v1/users/me/password",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+
+            success: function () {
+                $("#passwordResult").text("Password changed successfully");
+            },
+
+            error: function (err) {
+                $("#passwordResult").text(err.responseText);
+            }
+        });
+    }
+
+    function uploadAvatar() {
+        const file = $("#avatarInput")[0].files[0];
+
+        if (!file) {
+            alert("Choose file");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        $.ajax({
+            url: "/api/v1/users/me/avatar",
+            method: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+
+            success: function () {
+                $("#avatar").attr("src",
+                    "/api/v1/users/me/avatar?t=" + new Date().getTime());
+            }
+        });
+    }
+
+    function loadContacts() {
+
+        $.ajax({
+           url: "/api/v1/portfolios/me/contacts",
+           method: "GET",
+
+           success: function (contacts) {
+               const container = $("#contactsContainer");
+               container.empty();
+
+               if (!contacts || contacts.length === 0) {
+                   $("#contactsEmpty").show();
+                   return;
+               }
+
+               $("#contactsEmpty").hide();
+               contacts.forEach(contact => {
+                   let html = `<div style="margin-bottom:10px">
+                        <b>${contact.contactType}</b>: <span>${contact.contactValue}</span>`;
+
+                   if ([[${isOwner}]]) {
+                       html += `<button onclick="deleteContact(${contact.contactId})">Delete</button>`;
+                       if (contact.isVisible) {
+                           html += ` <button onclick="toggleVisibility(${contact.contactId}, false)">Hide</button>`;
+                       } else {
+                           html += ` <button onclick="toggleVisibility(${contact.contactId}, true)">Show</button>`;
+                       }
+                   }
+
+                   html += `</div>`;
+                   container.append(html);
+               });
+
+           }
+
+        });
+
+    }
+
+    function createContact() {
+
+        const data = {
+            contactType: $("#contactType").val(),
+            contactValue: $("#contactValue").val(),
+        };
+
+        $.ajax({
+            url: "/api/v1/contacts",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+
+            success: function () {
+                $("#contactType").val("");
+                $("#contactValue").val("");
+                loadContacts();
+            },
+
+            error: function (err) {
+                $("#contactResult").text(err.responseText);
+            }
+        });
+
+    }
+
+    function deleteContact(contactId) {
+
+        $.ajax({
+           url: "/api/v1/contacts/" + contactId,
+           method: "DELETE",
+
+           success: function () {
+               loadContacts();
+           },
+
+           error: function (err) {
+               alert(err.responseText);
+           }
+
+        });
+
+    }
+
+    function toggleVisibility(contactId, isVisible) {
+        $.ajax({
+            url: "/api/v1/contacts/" + contactId + "/visibility?isVisible=" + isVisible,
+            method: "PATCH",
+
+            success: function () {
+                loadContacts();
+            },
+
+            error: function (err) {
+                alert(err.responseText);
+            }
+        })
+    }
+
+    $(document).ready(function () {
+        loadContacts();
+    })
+
+</script>
 
 </body>
 </html>

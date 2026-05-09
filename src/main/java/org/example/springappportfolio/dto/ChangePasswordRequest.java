@@ -1,9 +1,15 @@
 package org.example.springappportfolio.dto;
 
-import lombok.Data;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-@Data
-public class ChangePasswordRequest {
-    private String oldPassword;
-    private String newPassword;
-}
+public record ChangePasswordRequest (
+
+    @NotBlank
+    String oldPassword,
+
+    @NotBlank
+    @Size(min = 8, message = "Password must be at least 8 characters")
+    String newPassword
+
+) {}

@@ -1,11 +1,14 @@
 package org.example.springappportfolio.controllers.api.user;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.Response;
 import org.example.springappportfolio.config.UserPrincipal;
 import org.example.springappportfolio.dto.ChangePasswordRequest;
 import org.example.springappportfolio.dto.UpdateUserRequest;
+import org.example.springappportfolio.exceptions.InternalServerErrorException;
+import org.example.springappportfolio.exceptions.NotFoundException;
 import org.example.springappportfolio.models.User;
 import org.example.springappportfolio.repositories.UserRepository;
 import org.example.springappportfolio.services.AuthService;
@@ -44,7 +47,7 @@ public class UserApiController {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
 
         User user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User", principal.getId()));
 
         return getAvatarResponse(user);
     }
@@ -52,14 +55,14 @@ public class UserApiController {
     @GetMapping("/{userId}/avatar")
     public ResponseEntity<byte[]> getAvatar(@PathVariable Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User", userId));
 
         return getAvatarResponse(user);
     }
 
     @PutMapping("/me")
     public ResponseEntity<String> updateUser(
-        @RequestBody UpdateUserRequest request,
+        @Valid @RequestBody UpdateUserRequest request,
         Authentication authentication
     ) {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
@@ -107,7 +110,7 @@ public class UserApiController {
                 .getResourceAsStream("/static/images/default-avatar.png")) {
             return is.readAllBytes();
         } catch (Exception e) {
-            throw new RuntimeException("Default image not found");
+            throw new InternalServerErrorException("Default image not found");
         }
     }
 

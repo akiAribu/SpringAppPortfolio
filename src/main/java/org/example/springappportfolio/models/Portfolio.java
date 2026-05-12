@@ -2,6 +2,9 @@ package org.example.springappportfolio.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
@@ -13,7 +16,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "portfolios")
-@Data
+@Getter
+@Setter
 public class Portfolio {
 
     @Id
@@ -21,11 +25,16 @@ public class Portfolio {
     @Column(name = "portfolio_id", nullable = false)
     private Long id;
 
+    @ToString.Exclude
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @OneToMany(
+            mappedBy = "portfolio",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
     private List<Project> projects = new ArrayList<>();
 
     @Column(name = "views_count")
@@ -39,6 +48,7 @@ public class Portfolio {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    @ToString.Exclude
     @OneToMany(
             mappedBy = "portfolio",
             cascade = CascadeType.ALL,
@@ -49,5 +59,14 @@ public class Portfolio {
     @Column(name = "is_public")
     @ColumnDefault("true")
     private Boolean isPublic = true;
+
+    @Column(name = "bio", length = 2000)
+    private String bio;
+
+    @Column(name = "specialization")
+    private String specialization;
+
+    @Column(name = "experience_years")
+    private Integer experienceYears;
 
 }

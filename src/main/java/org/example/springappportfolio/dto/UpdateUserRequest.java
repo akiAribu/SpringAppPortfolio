@@ -6,9 +6,15 @@ import lombok.Data;
 
 @Data
 public class UpdateUserRequest {
-   @NotBlank
+   @NotBlank (message = "Username can not be empty")
    private String username;
 
-   @Email
+   @NotBlank (message = "Email can not be empty")
+   @Email (message = "Invalid email format")
    private String email;
+
+   private String firstName;
+
+   private String lastName;
+
 }

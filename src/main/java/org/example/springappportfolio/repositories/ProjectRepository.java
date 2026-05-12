@@ -10,5 +10,6 @@ import java.util.List;
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     List<Project> findByPortfolioId(Long portfolioId);
+    List<Project> findByPortfolioIdOrderByCreatedAtDesc(Long portfolioId);
 
 }

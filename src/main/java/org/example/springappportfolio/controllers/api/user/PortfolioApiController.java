@@ -1,5 +1,6 @@
 package org.example.springappportfolio.controllers.api.user;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.springappportfolio.dto.ContactDto;
 import org.example.springappportfolio.dto.CreateContactRequest;
@@ -35,14 +36,14 @@ public class PortfolioApiController {
 
     @PutMapping("/portfolios/me")
     public ResponseEntity<PortfolioDto> updateMyPortfolio(
-            @RequestBody UpdatePortfolioRequest request,
+            @Valid @RequestBody UpdatePortfolioRequest request,
             Authentication authentication
     ) {
         Long userId = securityService.getCurrentUserId(authentication);
 
         PortfolioDto portfolio = portfolioService.updatePortfolio(
                 userId,
-                request.getIsPublic(),
+                request,
                 authentication
         );
 

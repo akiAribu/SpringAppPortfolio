@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Error</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .error-container {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 30px;
+            background-color: #f8f8f8;
+        }
+        h1 {
+            color: #d9534f;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div class="error-container">
+    <h1>Oops!</h1>
+    <div class="error-message">
+        <p th:text="${errorMessage != null ? errorMessage : 'An error occurred. Please try again.'}"></p>
+    </div>
+    <div class="buttons">
+        <a href="/profile">Go to Profile</a>
+        <a href="/">Go to Home</a>
+    </div>
+</div>
+</body>
+</html>

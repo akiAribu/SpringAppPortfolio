@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 
 public record ChangePasswordRequest (
 
-    @NotBlank
+    @NotBlank(message = "Old password can not be empty")
     String oldPassword,
 
     @NotBlank

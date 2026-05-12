@@ -29,18 +29,13 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final UserService userService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // Проверка уникальности имени пользователя
-        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new UsernameAlreadyExistsException(request.getUsername());
-        }
 
-        // Проверка уникальности email
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new EmailAlreadyExistsException(request.getEmail());
-        }
+        userService.validateUsernameUniqueness(request.getUsername());
+        userService.validateEmailUniqueness(request.getEmail());
 
         User user = User.builder()
                 .username(request.getUsername())

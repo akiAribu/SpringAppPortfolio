@@ -8,12 +8,17 @@ public record PortfolioDto (
         Long userId,
         String username,
         String email,
+        String firstName,
+        String lastName,
         byte[] userImage,
         Integer viewsCount,
         Boolean isPublic,
+        String bio,
+        String specialization,
+        Integer experienceYears,
         Instant createdAt,
         Instant updatedAt,
         List<ContactDto> contacts,
-        //List<ProjectSummary> projects
+        List<ProjectSummary> projects,
         Boolean isOwner
 ) {}

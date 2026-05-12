@@ -29,19 +29,25 @@
         <p th:if="${#lists.isEmpty(portfolio.contacts)}">No contacts</p>
     </div>
 
-<!--    <div th:if="${not #lists.isEmpty(portfolio.projects)}">-->
-<!--        <h3>Projects</h3>-->
-<!--        <div th:each="project : ${portfolio.projects}">-->
-<!--            <div style="border:1px solid #ccc; margin:10px; padding:10px;">-->
-<!--                <h4 th:text="${project.projectTitle}"></h4>-->
-<!--                <p th:text="${project.shortDescription}"></p>-->
-<!--                <a th:href="${project.projectLink}" th:if="${project.projectLink}" target="_blank">View Project</a>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-
     <p><b>Public:</b> <span th:text="${portfolio.isPublic ? 'Yes' : 'No'}"></span></p>
     <p><b>Views:</b> <span th:text="${portfolio.viewsCount}"></span></p>
+
+    <hr>
+    <h3>Projects</h3>
+    <div th:if="${not #lists.isEmpty(portfolio.projects)}" style="display: flex; flex-wrap: wrap; gap: 15px;">
+        <div th:each="project : ${portfolio.projects}"
+             style="border: 1px solid #ccc; padding: 15px; width: 250px; border-radius: 8px;">
+            <a th:href="'/project/' + ${project.projectId} + '?portfolioId=' + ${portfolio.portfolioId}" style="text-decoration: none; color: inherit;">
+                <div th:if="${project.preview}" style="text-align: center; margin-bottom: 10px;">
+                    <img th:src="'/api/v1/projects/' + ${project.projectId} + '/preview?portfolioId=' + ${portfolio.portfolioId}"
+                         style="max-width: 100%; max-height: 150px; border-radius: 4px;"/>
+                </div>
+                <h4 th:text="${project.title}" style="margin: 5px 0;"></h4>
+                <p th:text="${project.shortDescription}" style="font-size: 14px; color: #666;"></p>
+            </a>
+        </div>
+    </div>
+    <p th:if="${#lists.isEmpty(portfolio.projects)}">No projects</p>
 </div>
 
 <div th:if="${error}">

@@ -3,6 +3,8 @@ package org.example.springappportfolio.services;
 import lombok.RequiredArgsConstructor;
 import org.example.springappportfolio.config.UserPrincipal;
 import org.example.springappportfolio.dto.*;
+import org.example.springappportfolio.exceptions.InternalServerErrorException;
+import org.example.springappportfolio.exceptions.ValidationException;
 import org.example.springappportfolio.exceptions.auth.EmailAlreadyExistsException;
 import org.example.springappportfolio.exceptions.auth.UsernameAlreadyExistsException;
 import org.example.springappportfolio.models.User;
@@ -58,6 +60,8 @@ public class UserService {
 
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
 
         updateAuthenticationPrincipal(user);
 
@@ -74,7 +78,7 @@ public class UserService {
             user.setUserImage(file.getBytes());
             user.setImageType(file.getContentType());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to update avatar: " + e.getMessage());
+            throw new InternalServerErrorException("Failed to update avatar", e);
         }
     }
 
@@ -110,38 +114,50 @@ public class UserService {
     public void validateUsernameUniqueness(String username, Long currentUserId) {
 
         userRepository.findByUsername(username)
-                .filter(user ->
-                        !user.getId().equals(currentUserId))
+                .filter(user -> currentUserId == null || !user.getId().equals(currentUserId))
                 .ifPresent(user -> {
                     throw new UsernameAlreadyExistsException(username);
                 });
 
     }
 
+    public void validateUsernameUniqueness(String username) {
+        validateUsernameUniqueness(username, null);
+    }
+
     public void validateEmailUniqueness(String email, Long currentUserId) {
         userRepository.findByEmail(email)
-                .filter(user ->
-                        !user.getId().equals(currentUserId))
+                .filter(user -> currentUserId == null || !user.getId().equals(currentUserId))
                 .ifPresent(user -> {
                     throw new EmailAlreadyExistsException(email);
                 });
     }
 
+    public void validateEmailUniqueness(String email) {
+        validateEmailUniqueness(email, null);
+    }
+
     public void validateAvatar(MultipartFile file) {
 
+        ValidationException exception = new ValidationException("Avatar validation failed");
+
         if (file.isEmpty()) {
-            throw new RuntimeException("Empty file");
+            exception.addError("file", "File is empty");
         }
 
         if (file.getSize() > 2 * 1024 * 1024) {
-            throw new RuntimeException("File is too large (max 2MB)");
+            exception.addError("file", "File is too large (max 2MB)");
         }
 
         String contentType = file.getContentType();
         if (contentType == null ||
                 (!contentType.equals("image/jpeg") &&
                         !contentType.equals("image/png"))) {
-            throw new RuntimeException("Invalid file type");
+           exception.addError("file", "Invalid file type. Allowed: jpeg, png");
+        }
+
+        if (!exception.getErrors().isEmpty()) {
+            throw exception;
         }
 
     }
@@ -152,7 +168,9 @@ public class UserService {
                 oldPassword,
                 user.getUserPassword())
         ) {
-            throw new IllegalArgumentException("Old password is incorrect");
+            ValidationException e = new ValidationException("Password validation failed");
+            e.addError("oldPassword", "Old password is incorrect");
+            throw e;
         }
 
     }
@@ -163,7 +181,9 @@ public class UserService {
                 newPassword,
                 user.getUserPassword())
         ) {
-            throw new IllegalArgumentException("New password must be different");
+            ValidationException e = new ValidationException("Password validation failed");
+            e.addError("newPassword", "New password must be different from current");
+            throw e;
         }
 
     }

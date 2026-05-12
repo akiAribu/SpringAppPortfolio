@@ -3,8 +3,10 @@ package org.example.springappportfolio.controllers.page;
 import lombok.RequiredArgsConstructor;
 import org.example.springappportfolio.config.UserPrincipal;
 import org.example.springappportfolio.dto.PortfolioDto;
+import org.example.springappportfolio.dto.ProjectDto;
 import org.example.springappportfolio.models.User;
 import org.example.springappportfolio.services.PortfolioService;
+import org.example.springappportfolio.services.ProjectService;
 import org.example.springappportfolio.services.SecurityService;
 import org.example.springappportfolio.services.UserService;
 import org.springframework.security.core.Authentication;
@@ -12,6 +14,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -20,6 +25,7 @@ public class PortfolioPageController {
     private final UserService userService;
     private final PortfolioService portfolioService;
     private final SecurityService securityService;
+    private final ProjectService projectService;
 
     @GetMapping("/profile")
     public String profile(Authentication authentication, Model model) {
@@ -51,34 +57,46 @@ public class PortfolioPageController {
         return "edit_profile";
     }
 
-   @GetMapping("/u/{userId}")
-   public String viewUserPortfolio(
-           @PathVariable Long userId,
-           Authentication authentication,
-           Model model
-   ) {
-        try {
-            PortfolioDto portfolio = portfolioService.getPortfolioByUserId(userId, authentication);
 
-            if (Boolean.TRUE.equals(portfolio.isOwner())) {
-                return "redirect:/profile";
-            }
+    @GetMapping("/u/{userId}")
+    public String viewUserPortfolio(
+            @PathVariable Long userId,
+            Authentication authentication,
+            Model model
+    ) {
+        PortfolioDto portfolio = portfolioService.getPortfolioByUserId(userId, authentication);
 
-            model.addAttribute("portfolio", portfolio);
-            model.addAttribute("isOwner", portfolio.isOwner());
-
-            return "portfolio_view";
-
-        } catch (SecurityException e) {
-
-            model.addAttribute("error", "This portfolio is private");
-            return "error";
-
-        } catch (Exception e) {
-
-            model.addAttribute("error", "User not found");
-            return "error";
-
+        if (Boolean.TRUE.equals(portfolio.isOwner())) {
+            return "redirect:/profile";
         }
-   }
+
+        model.addAttribute("portfolio", portfolio);
+        model.addAttribute("isOwner", portfolio.isOwner());
+
+        return "portfolio_view";
+    }
+
+    @GetMapping("/project/{projectId}")
+    public String viewProject(
+            @PathVariable Long projectId,
+            @RequestParam Long portfolioId,
+            Authentication authentication,
+            Model model
+    ) {
+        boolean isOwner = securityService.isOwner(portfolioId, authentication);
+
+        ProjectDto project = projectService.getProjectById(projectId, portfolioId, isOwner);
+        List<byte[]> images = projectService.getProjectImages(projectId, portfolioId, isOwner);
+
+        PortfolioDto portfolio = portfolioService.getPortfolioById(portfolioId, authentication);
+
+        model.addAttribute("project", project);
+        model.addAttribute("portfolioId", portfolioId);
+        model.addAttribute("userId", portfolio.userId());
+        model.addAttribute("isOwner", isOwner);
+        model.addAttribute("images", images);
+
+        return "project_detail";
+    }
+
 }

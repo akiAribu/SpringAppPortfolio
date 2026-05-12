@@ -6,8 +6,16 @@
 </head>
 <body>
 <h2>Profile Page</h2>
-<a href="/profile/edit">Edit profile</a>
-<br><br>
+
+<div th:if="${isOwner}">
+    <a href="/profile/edit">Edit profile</a>
+    <br><br>
+</div>
+
+<div th:if="${isOwner}">
+    <a href="/logout">Logout</a>
+    <br><br>
+</div>
 
 <div th:if="${isOwner}">
     <button onclick="togglePortfolioVisibility()">
@@ -40,41 +48,66 @@
 
 <h3>Contacts</h3>
 <div id="contactsContainer"></div>
-<p id="contactsEmpty" style="display:none;">Пусто</p>
+<p id="contactsEmpty" style="display:none;">No contacts</p>
 
-<div th:if="${isOwner}">
-    <h3>Add Contacts</h3>
-    <input type="text" id="contactType" placeholder="Contact Type"/>
-    <br><br>
-    <input type="text" id="contactValue" placeholder="Contact value"/>
-    <br><br>
-    <button onclick="createContact()">
-        Add Contact
-    </button>
-    <p id="contactResult"></p>
+<div style="margin-top: 10px;">
+    <a href="/profile/edit">Manage Contacts</a>
 </div>
 
 <hr>
 
 <div th:if="${isOwner}">
-    <h3>Change Password</h3>
-    <input type="password" id="oldPassword" placeholder="Old Password"/>
-    <br><br>
-    <input type="password" id="newPassword" placeholder="New Password"/>
-    <br><br>
-    <input type="password" id="confirmPassword" placeholder="Confirm Password"/>
-    <br><br>
-    <button onclick="changePassword()">Change Password</button>
-    <p id="passwordResult"></p>
+    <h3>My Projects</h3>
+    <button onclick="showCreateProjectForm()">Add New Project</button>
+
+    <div id="createProjectForm" style="display:none; margin-top:15px; padding:15px; border:1px solid #ccc;">
+        <input type="text" id="projectTitle" placeholder="Project Title" style="width:300px;"/>
+        <br><br>
+        <textarea id="projectShortDesc" placeholder="Short Description" rows="2" style="width:300px;"></textarea>
+        <br><br>
+        <textarea id="projectFullDesc" placeholder="Full Description" rows="5" style="width:300px;"></textarea>
+        <br><br>
+        <input type="text" id="projectLink" placeholder="Project Link" style="width:300px;"/>
+        <br><br>
+        <label>Preview Image:</label>
+        <input type="file" id="projectPreview" accept="image/*"/>
+        <br><br>
+        <label><input type="checkbox" id="projectIsVisible" checked/> Visible</label>
+        <br><br>
+        <button onclick="createProject()">Create</button>
+        <button onclick="hideCreateProjectForm()">Cancel</button>
+        <p id="createProjectResult"></p>
+    </div>
+
+    <div id="projectsContainer" style="display:flex; flex-wrap:wrap; gap:15px; margin-top:15px;"></div>
+    <p id="noProjects" style="display:none;">No projects yet</p>
 
     <hr>
 </div>
 
-<div th:if="${isOwner}">
-    <a href="/logout">Logout</a>
-</div>
-
 <script>
+    function showError(elementId, err) {
+        console.log("Error status:", err.status);
+        console.log("Response text:", err.responseText);
+
+        let message = "An error occurred";
+        try {
+            if (err.responseText) {
+                const json = JSON.parse(err.responseText);
+                if (json.errors && json.errors.length > 0) {
+                    message = json.errors.map(e => e.field + ": " + e.message).join(", ");
+                } else if (json.message) {
+                    message = json.message;
+                } else if (json.errorCode) {
+                    message = json.errorCode;
+                }
+            }
+        } catch (e) {
+            message = err.responseText || "An error occurred";
+        }
+        $("#" + elementId).text(message).css("color", "red").css("white-space", "normal");
+    }
+
     function togglePortfolioVisibility() {
         const currentPublic = [[${portfolio.isPublic}]];
         const newPublic = !currentPublic;
@@ -90,32 +123,9 @@
             },
 
             error: function (err) {
-                $("#visibilityResult").text(err.responseText);
+                showError("visibilityResult", err);
             }
         })
-    }
-
-    function changePassword() {
-        const data = {
-            oldPassword: $("#oldPassword").val(),
-            newPassword: $("#newPassword").val(),
-            confirmPassword: $("#confirmPassword").val()
-        };
-
-        $.ajax({
-            url: "/api/v1/users/me/password",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(data),
-
-            success: function () {
-                $("#passwordResult").text("Password changed successfully");
-            },
-
-            error: function (err) {
-                $("#passwordResult").text(err.responseText);
-            }
-        });
     }
 
     function uploadAvatar() {
@@ -146,103 +156,167 @@
     function loadContacts() {
 
         $.ajax({
-           url: "/api/v1/portfolios/me/contacts",
-           method: "GET",
+            url: "/api/v1/portfolios/me/contacts",
+            method: "GET",
 
-           success: function (contacts) {
-               const container = $("#contactsContainer");
-               container.empty();
+            success: function (contacts) {
+                const container = $("#contactsContainer");
+                container.empty();
 
-               if (!contacts || contacts.length === 0) {
-                   $("#contactsEmpty").show();
-                   return;
-               }
+                if (!contacts || contacts.length === 0) {
+                    $("#contactsEmpty").show();
+                    return;
+                }
 
-               $("#contactsEmpty").hide();
-               contacts.forEach(contact => {
-                   let html = `<div style="margin-bottom:10px">
-                        <b>${contact.contactType}</b>: <span>${contact.contactValue}</span>`;
+                $("#contactsEmpty").hide();
+                contacts.forEach(contact => {
+                    let html = `<div style="margin-bottom:10px">
+                        <b>${contact.contactType}</b>: <span>${contact.contactValue}</span>
+                    </div>`;
+                    container.append(html);
+                });
 
-                   if ([[${isOwner}]]) {
-                       html += `<button onclick="deleteContact(${contact.contactId})">Delete</button>`;
-                       if (contact.isVisible) {
-                           html += ` <button onclick="toggleVisibility(${contact.contactId}, false)">Hide</button>`;
-                       } else {
-                           html += ` <button onclick="toggleVisibility(${contact.contactId}, true)">Show</button>`;
-                       }
-                   }
-
-                   html += `</div>`;
-                   container.append(html);
-               });
-
-           }
-
-        });
-
-    }
-
-    function createContact() {
-
-        const data = {
-            contactType: $("#contactType").val(),
-            contactValue: $("#contactValue").val(),
-        };
-
-        $.ajax({
-            url: "/api/v1/contacts",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(data),
-
-            success: function () {
-                $("#contactType").val("");
-                $("#contactValue").val("");
-                loadContacts();
-            },
-
-            error: function (err) {
-                $("#contactResult").text(err.responseText);
             }
-        });
-
-    }
-
-    function deleteContact(contactId) {
-
-        $.ajax({
-           url: "/api/v1/contacts/" + contactId,
-           method: "DELETE",
-
-           success: function () {
-               loadContacts();
-           },
-
-           error: function (err) {
-               alert(err.responseText);
-           }
 
         });
 
-    }
-
-    function toggleVisibility(contactId, isVisible) {
-        $.ajax({
-            url: "/api/v1/contacts/" + contactId + "/visibility?isVisible=" + isVisible,
-            method: "PATCH",
-
-            success: function () {
-                loadContacts();
-            },
-
-            error: function (err) {
-                alert(err.responseText);
-            }
-        })
     }
 
     $(document).ready(function () {
         loadContacts();
+        loadProjects();
+    })
+
+    function showCreateProjectForm() {
+        $("#createProjectForm").show();
+    }
+
+    function hideCreateProjectForm() {
+        $("#createProjectForm").hide();
+        $("#createProjectResult").text("");
+    }
+
+    function createProject() {
+        const formData = new FormData();
+        formData.append("title", $("#projectTitle").val());
+        formData.append("shortDescription", $("#projectShortDesc").val());
+        formData.append("fullDescription", $("#projectFullDesc").val());
+        formData.append("projectLink", $("#projectLink").val());
+        formData.append("isVisible", $("#projectIsVisible").is(":checked"));
+
+        const previewFile = $("#projectPreview")[0].files[0];
+        if (previewFile) {
+            formData.append("preview", previewFile);
+        }
+
+        $.ajax({
+            url: "/api/v1/portfolios/me/projects/with-preview",
+            method: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: "json",
+            success: function () {
+                $("#projectTitle").val("");
+                $("#projectShortDesc").val("");
+                $("#projectFullDesc").val("");
+                $("#projectLink").val("");
+                $("#projectPreview").val("");
+                hideCreateProjectForm();
+                loadProjects();
+            },
+            error: function (err) {
+                showError("createProjectResult", err);
+            }
+        });
+    }
+
+    function loadProjects() {
+        $.ajax({
+            url: "/api/v1/portfolios/me",
+            method: "GET",
+            success: function (portfolio) {
+                const container = $("#projectsContainer");
+                container.empty();
+
+                if (!portfolio.projects || portfolio.projects.length === 0) {
+                    $("#noProjects").show();
+                    return;
+                }
+
+                $("#noProjects").hide();
+                const sortedProjects = [...portfolio.projects].sort((a, b) => {
+                    if (!a.createdAt && !b.createdAt) return 0;
+                    if (!a.createdAt) return 1;
+                    if (!b.createdAt) return -1;
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                });
+                sortedProjects.forEach(project => {
+                    let card = `<div style="border:1px solid #ccc; padding:15px; width:250px; border-radius:8px;">
+                        <a href="/project/${project.projectId}?portfolioId=${portfolio.portfolioId}" style="text-decoration:none; color:inherit;">
+                            ${project.preview ? `<img src="/api/v1/projects/${project.projectId}/preview?portfolioId=${portfolio.portfolioId}" style="max-width:100%; max-height:150px; border-radius:4px; margin-bottom:10px;"/>` : ''}
+                            <h4 style="margin:5px 0;">${project.title}</h4>
+                            <p style="font-size:14px; color:#666;">${project.shortDescription || ''}</p>
+                        </a>
+                        <div style="margin-top:10px;">
+                            <button onclick="editProject(${project.projectId}, '${portfolio.portfolioId}')">Edit</button>
+                            <button onclick="deleteProject(${project.projectId}, ${portfolio.portfolioId})">Delete</button>
+                            ${project.isVisible
+                        ? `<button onclick="toggleProjectVisibility(${project.projectId}, ${portfolio.portfolioId}, false)">Hide</button>`
+                        : `<button onclick="toggleProjectVisibility(${project.projectId}, ${portfolio.portfolioId}, true)">Show</button>`
+                    }
+                        </div>
+                    </div>`;
+                    container.append(card);
+                });
+            }
+        });
+    }
+
+    function editProject(projectId, portfolioId) {
+        window.location.href = "/project/" + projectId + "?portfolioId=" + portfolioId;
+    }
+
+    function deleteProject(projectId, portfolioId) {
+        if (!confirm("Delete this project?")) return;
+
+        $.ajax({
+            url: "/api/v1/projects/" + projectId + "?portfolioId=" + portfolioId,
+            method: "DELETE",
+            success: function () {
+                loadProjects();
+            },
+            error: function (err) {
+                showErrorMessage(err);
+            }
+        });
+    }
+
+    function showErrorMessage(err) {
+        let message = err.responseText;
+        try {
+            const json = JSON.parse(err.responseText);
+            message = json.message || json.errorCode || err.responseText;
+        } catch (e) {}
+        alert(message);
+    }
+
+    function toggleProjectVisibility(projectId, portfolioId, isVisible) {
+        $.ajax({
+            url: "/api/v1/projects/" + projectId + "/visibility?portfolioId=" + portfolioId + "&isVisible=" + isVisible,
+            method: "PATCH",
+            success: function () {
+                loadProjects();
+            },
+            error: function (err) {
+                alert(err.responseText);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        loadContacts();
+        loadProjects();
     })
 
 </script>

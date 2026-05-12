@@ -2,7 +2,11 @@ package org.example.springappportfolio.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.JdbcTypeCode;
 
 import java.time.Instant;
 import java.util.LinkedHashSet;
@@ -10,7 +14,8 @@ import java.util.Set;
 
 @Entity
 @Table (name = "projects")
-@Data
+@Getter
+@Setter
 public class Project {
 
     @Id
@@ -18,11 +23,14 @@ public class Project {
     @Column(name = "project_id", nullable = false)
     private Integer id;
 
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "portfolio_id", nullable = false)
     private Portfolio portfolio;
 
-    @Column(name = "project_preview")
+    @Lob
+    @JdbcTypeCode(java.sql.Types.BINARY)
+    @Column(name = "project_preview", columnDefinition = "BYTEA")
     private byte[] projectPreview;
 
     @Column(name = "project_title")
@@ -45,10 +53,16 @@ public class Project {
     @Column(name = "created_at")
     private Instant createdAt;
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "project")
     private Set<TagInProject> tags = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "project")
+    @ToString.Exclude
+    @OneToMany(
+            mappedBy = "project",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private Set<ProjectImage> projectImages = new LinkedHashSet<>();
 
 }

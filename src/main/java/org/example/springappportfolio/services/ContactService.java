@@ -3,6 +3,8 @@ package org.example.springappportfolio.services;
 import lombok.RequiredArgsConstructor;
 import org.example.springappportfolio.dto.ContactDto;
 import org.example.springappportfolio.dto.CreateContactRequest;
+import org.example.springappportfolio.exceptions.AccessDeniedException;
+import org.example.springappportfolio.exceptions.NotFoundException;
 import org.example.springappportfolio.mappers.ContactMapper;
 import org.example.springappportfolio.models.Contact;
 import org.example.springappportfolio.models.Portfolio;
@@ -39,7 +41,7 @@ public class ContactService {
 
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() ->
-                        new RuntimeException("Portfolio not found"));
+                        new NotFoundException("Portfolio", portfolioId));
 
         Contact contact = Contact.builder()
                 .portfolio(portfolio)
@@ -66,7 +68,7 @@ public class ContactService {
         validateOwnership(isOwner);
 
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
-                .orElseThrow(() -> new RuntimeException("Portfolio not found"));
+                .orElseThrow(() -> new NotFoundException("Portfolio", portfolioId));
 
         Contact contact = getPortfolioContact(portfolioId, contactId);
 
@@ -90,10 +92,10 @@ public class ContactService {
     private Contact getPortfolioContact(Long portfolioId, Long contactId) {
 
         Contact contact = contactRepository.findById(contactId)
-                .orElseThrow(() -> new RuntimeException("Contact Not Found"));
+                .orElseThrow(() -> new NotFoundException("Contact", contactId));
 
         if (!contact.getPortfolio().getId().equals(portfolioId)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException();
         }
 
         return contact;
@@ -101,7 +103,7 @@ public class ContactService {
 
     private void validateOwnership(Boolean isOwner) {
         if (!isOwner) {
-            throw new SecurityException("Access denied");
+            throw new AccessDeniedException();
         }
 
     }

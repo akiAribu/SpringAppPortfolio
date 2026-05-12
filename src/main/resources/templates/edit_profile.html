@@ -8,22 +8,89 @@
 
 <h2>Edit Profile</h2>
 
-<input type="text" id="username" th:value="${user.username}"/>
-<br><br>
+<div style="margin-bottom: 30px;">
+    <h3>Basic Info</h3>
+    <input type="text" id="username" th:value="${user.username}" style="width: 300px;"/>
+    <div id="usernameError" class="field-error" style="display:none;"></div>
+    <br><br>
+    <input type="email" id="email" th:value="${user.email}" style="width: 300px;"/>
+    <div id="emailError" class="field-error" style="display:none;"></div>
+    <br><br>
+    <button onclick="updateProfile()">Save Profile</button>
+    <p id="profileResult"></p>
+</div>
 
-<input type="email" id="email" th:value="${user.email}"/>
-<br><br>
+<hr>
 
-<button onclick="updateProfile()">Save</button>
+<div style="margin-bottom: 30px;">
+    <h3>Contacts</h3>
+    <div id="contactsContainer"></div>
+    <p id="contactsEmpty" style="display:none;">No contacts</p>
 
-<p id="result"></p>
+    <div style="margin-top: 15px;">
+        <input type="text" id="contactType" placeholder="Contact Type" style="width: 200px;"/>
+        <div id="contactTypeError" class="field-error" style="display:none;"></div>
+        <br><br>
+        <input type="text" id="contactValue" placeholder="Contact value" style="width: 200px;"/>
+        <div id="contactValueError" class="field-error" style="display:none;"></div>
+        <br><br>
+        <button onclick="createContact()">Add Contact</button>
+        <p id="contactResult"></p>
+    </div>
+</div>
+
+<hr>
+
+<div style="margin-bottom: 30px;">
+    <h3>Change Password</h3>
+    <input type="password" id="oldPassword" placeholder="Old Password" style="width: 300px;"/>
+    <div id="oldPasswordError" class="field-error" style="display:none;"></div>
+    <br><br>
+    <input type="password" id="newPassword" placeholder="New Password" style="width: 300px;"/>
+    <div id="newPasswordError" class="field-error" style="display:none;"></div>
+    <br><br>
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" style="width: 300px;"/>
+    <div id="confirmPasswordError" class="field-error" style="display:none;"></div>
+    <br><br>
+    <button onclick="changePassword()">Change Password</button>
+    <p id="passwordResult"></p>
+</div>
+
+<hr>
 
 <br>
-<a href="/profile">Back</a>
+<a href="/profile">Back to Profile</a>
 
 <script>
-    function updateProfile() {
+    function parseError(err) {
+        let result = { message: "", fieldErrors: [] };
+        try {
+            const json = JSON.parse(err.responseText);
+            result.message = json.message || "";
+            if (json.errors && json.errors.length > 0) {
+                result.fieldErrors = json.errors;
+            }
+        } catch (e) {
+            result.message = err.responseText;
+        }
+        return result;
+    }
 
+    function showFieldError(fieldId, error) {
+        const errorDiv = $("#" + fieldId + "Error");
+        if (error) {
+            errorDiv.text(error).css("color", "red").css("font-size", "12px").css("display", "block");
+        } else {
+            errorDiv.hide();
+        }
+    }
+
+    function clearAllErrors() {
+        $(".field-error").hide().text("");
+    }
+
+    function updateProfile() {
+        clearAllErrors();
         const data = {
             username: $("#username").val(),
             email: $("#email").val()
@@ -36,14 +103,141 @@
             data: JSON.stringify(data),
 
             success: function () {
-                $("#result").text("Profile updated");
+                $("#profileResult").text("Profile updated");
             },
 
             error: function (err) {
-                $("#result").text(err.responseText);
+                const errorData = parseError(err);
+                if (errorData.fieldErrors.length > 0) {
+                    errorData.fieldErrors.forEach(e => {
+                        showFieldError(e.field + "Error", e.message);
+                    });
+                    $("#profileResult").text(errorData.message).css("color", "red");
+                } else {
+                    $("#profileResult").text(errorData.message).css("color", "red");
+                }
             }
         });
     }
+
+    function loadContacts() {
+        $.ajax({
+            url: "/api/v1/portfolios/me/contacts",
+            method: "GET",
+            success: function (contacts) {
+                const container = $("#contactsContainer");
+                container.empty();
+
+                if (!contacts || contacts.length === 0) {
+                    $("#contactsEmpty").show();
+                    return;
+                }
+
+                $("#contactsEmpty").hide();
+                contacts.forEach(contact => {
+                    let html = `<div style="margin-bottom:10px;">
+                        <b>${contact.contactType}</b>: <span>${contact.contactValue}</span>
+                        <button onclick="deleteContact(${contact.contactId})">Delete</button>
+                        ${contact.isVisible
+                        ? `<button onclick="toggleVisibility(${contact.contactId}, false)">Hide</button>`
+                        : `<button onclick="toggleVisibility(${contact.contactId}, true)">Show</button>`
+                    }
+                    </div>`;
+                    container.append(html);
+                });
+            }
+        });
+    }
+
+    function createContact() {
+        clearAllErrors();
+        const data = {
+            contactType: $("#contactType").val(),
+            contactValue: $("#contactValue").val()
+        };
+
+        $.ajax({
+            url: "/api/v1/contacts",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function () {
+                $("#contactType").val("");
+                $("#contactValue").val("");
+                loadContacts();
+            },
+            error: function (err) {
+                const errorData = parseError(err);
+                if (errorData.fieldErrors.length > 0) {
+                    errorData.fieldErrors.forEach(e => {
+                        showFieldError(e.field + "Error", e.message);
+                    });
+                }
+                $("#contactResult").text(errorData.message).css("color", "red");
+            }
+        });
+    }
+
+    function deleteContact(contactId) {
+        $.ajax({
+            url: "/api/v1/contacts/" + contactId,
+            method: "DELETE",
+            success: function () {
+                loadContacts();
+            },
+            error: function (err) {
+                alert(err.responseText);
+            }
+        });
+    }
+
+    function toggleVisibility(contactId, isVisible) {
+        $.ajax({
+            url: "/api/v1/contacts/" + contactId + "/visibility?isVisible=" + isVisible,
+            method: "PATCH",
+            success: function () {
+                loadContacts();
+            },
+            error: function (err) {
+                alert(err.responseText);
+            }
+        });
+    }
+
+    function changePassword() {
+        clearAllErrors();
+        const data = {
+            oldPassword: $("#oldPassword").val(),
+            newPassword: $("#newPassword").val(),
+            confirmPassword: $("#confirmPassword").val()
+        };
+
+        $.ajax({
+            url: "/api/v1/users/me/password",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function () {
+                $("#passwordResult").text("Password changed successfully").css("color", "green");
+                $("#oldPassword").val("");
+                $("#newPassword").val("");
+                $("#confirmPassword").val("");
+            },
+            error: function (err) {
+                const errorData = parseError(err);
+                if (errorData.fieldErrors.length > 0) {
+                    errorData.fieldErrors.forEach(e => {
+                        showFieldError(e.field + "Error", e.message);
+                    });
+                }
+                $("#passwordResult").text(errorData.message).css("color", "red");
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        loadContacts();
+    })
 </script>
 
 </body>

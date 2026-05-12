@@ -3,6 +3,9 @@ package org.example.springappportfolio.services;
 import lombok.RequiredArgsConstructor;
 import org.example.springappportfolio.dto.ContactDto;
 import org.example.springappportfolio.dto.PortfolioDto;
+import org.example.springappportfolio.dto.UpdatePortfolioRequest;
+import org.example.springappportfolio.exceptions.AccessDeniedException;
+import org.example.springappportfolio.exceptions.NotFoundException;
 import org.example.springappportfolio.mappers.ContactMapper;
 import org.example.springappportfolio.mappers.PortfolioMapper;
 import org.example.springappportfolio.models.Portfolio;
@@ -29,7 +32,7 @@ public class PortfolioService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                        new NotFoundException("User", userId));
 
         return portfolioMapper.toDto(user.getPortfolio(), true);
 
@@ -39,19 +42,19 @@ public class PortfolioService {
         Long userId = securityService.getCurrentUserId(authentication);
 
         return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"))
+                .orElseThrow(() -> new NotFoundException("User", userId))
                 .getPortfolio().getId();
     }
 
     public PortfolioDto getPortfolioById(Long portfolioId, Authentication authentication) {
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
-                .orElseThrow(() -> new RuntimeException("Portfolio not found"));
+                .orElseThrow(() -> new NotFoundException("Portfolio", portfolioId));;
 
         boolean isOwner = securityService.isOwner(portfolioId, authentication);
         boolean canAccess = securityService.canAccessPortfolio(portfolioId, authentication);
 
         if (!canAccess) {
-            throw new SecurityException("Access denied to private portfolio");
+            throw new AccessDeniedException("Access denied to private portfolio");
         }
 
         return portfolioMapper.toDto(portfolio, isOwner);
@@ -61,40 +64,52 @@ public class PortfolioService {
     public PortfolioDto getPortfolioByUserId(Long userId, Authentication authentication) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User", userId));;
 
         if (user.getPortfolio() == null) {
-            throw new RuntimeException("Portfolio not found");
+            throw new NotFoundException("Portfolio not found");
         }
 
         boolean isOwner = securityService.isOwnerByUserId(userId, authentication);
         boolean canAccess = securityService.canAccessUserPortfolio(userId, authentication);
 
         if (!canAccess) {
-            throw new SecurityException("Access denied to private portfolio");
+            throw new AccessDeniedException("Access denied to private portfolio");
         }
 
         return portfolioMapper.toDto(user.getPortfolio(), isOwner);
 
     }
 
-    public PortfolioDto updatePortfolio(Long userId, Boolean isPublic, Authentication authentication) {
+    public PortfolioDto updatePortfolio(Long userId, UpdatePortfolioRequest request, Authentication authentication) {
 
         if (!securityService.isOwnerByUserId(userId, authentication)) {
-            throw new SecurityException("Access denied");
+            throw new AccessDeniedException();
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User", userId));
 
         Portfolio portfolio = user.getPortfolio();
 
         if (portfolio == null) {
-            throw new RuntimeException("Portfolio not found");
+            throw new NotFoundException("Portfolio not found");
         }
 
-        if (isPublic != null) {
-            portfolio.setIsPublic(isPublic);
+        if (request.getBio() != null) {
+            portfolio.setBio(request.getBio());
+        }
+
+        if (request.getSpecialization() != null) {
+            portfolio.setSpecialization(request.getSpecialization());
+        }
+
+        if (request.getExperienceYears() != null) {
+            portfolio.setExperienceYears(request.getExperienceYears());
+        }
+
+        if (request.getIsPublic() != null) {
+            portfolio.setIsPublic(request.getIsPublic());
         }
 
         portfolio = portfolioRepository.save(portfolio);

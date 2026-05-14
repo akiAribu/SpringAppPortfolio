@@ -25,6 +25,26 @@
         <p id="previewResult"></p>
     </div>
 
+    <div style="margin-top: 30px;">
+        <h3>Technologies</h3>
+
+        <div id="projectTags"
+             style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+        </div>
+
+        <div th:if="${isOwner}">
+            <h4>Add Technologies</h4>
+
+            <div id="tagsCheckboxes"
+                 style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+            </div>
+
+            <button onclick="saveTags()">Save Tags</button>
+
+            <p id="tagsResult"></p>
+        </div>
+    </div>
+
     <h3>Description</h3>
     <p th:text="${project.fullDescription}" style="white-space: pre-wrap;"></p>
 
@@ -87,7 +107,13 @@
     <p style="color:red;" th:text="${error}"></p>
 </div>
 
-<script>
+<script th:inline="javascript">
+
+    $(document).ready(function () {
+        loadAvailableTags();
+        renderCurrentTags();
+    });
+
     function showError(elementId, err) {
         let message = err.responseText;
         try {
@@ -230,6 +256,139 @@
             }
         });
     }
+
+    function renderCurrentTags() {
+
+        const tags = [[${projectTagNames}]];
+
+        const container = $("#projectTags");
+
+        container.empty();
+
+        if (!tags || tags.length === 0) {
+            container.append("<span>No technologies specified</span>");
+            return;
+        }
+
+        tags.forEach(tag => {
+
+            let html = `
+            <div style="
+                padding:6px 12px;
+                background:#eee;
+                border-radius:20px;
+                display:flex;
+                align-items:center;
+                gap:8px;
+            ">
+                <span>${tag}</span>
+        `;
+
+            if ([[${isOwner}]]) {
+                html += `
+                <button onclick="removeTag('${tag}')">
+                    x
+                </button>
+            `;
+            }
+
+            html += `</div>`;
+
+            container.append(html);
+        });
+    }
+
+    function loadAvailableTags() {
+
+        const currentTagNames = [[${projectTagNames}]];
+
+        $.ajax({
+            url: "/api/v1/tags",
+            method: "GET",
+            success: function (tags) {
+
+                const container = $("#tagsCheckboxes");
+
+                container.empty();
+
+                tags.forEach(tag => {
+
+                    const checked = currentTagNames.includes(tag.name) ? "checked" : "";
+
+                    container.append(`
+                    <label style="display:flex; gap:5px;">
+                        <input type="checkbox"
+                               value="${tag.name}" ${checked}>
+                        ${tag.name}
+                    </label>
+                `);
+
+                });
+
+            }
+        });
+
+    }
+
+    function saveTags() {
+
+        const selected = [];
+
+        $("#tagsCheckboxes input:checked").each(function () {
+            selected.push($(this).val());
+        });
+
+        $.ajax({
+            url: "/api/v1/projects/" + [[${project.projectId}]]
+                + "/tags?portfolioId=" + [[${portfolioId}]],
+
+            method: "PUT",
+
+            contentType: "application/json",
+
+            data: JSON.stringify({
+                tags: selected
+            }),
+
+            success: function () {
+                location.reload();
+            },
+
+            error: function (err) {
+                showError("tagsResult", err);
+            }
+        });
+
+    }
+
+    function removeTag(tagName) {
+
+        const currentTags = [[${projectTagNames}]]
+            .filter(t => t !== tagName);
+
+        $.ajax({
+            url: "/api/v1/projects/" + [[${project.projectId}]]
+                + "/tags?portfolioId=" + [[${portfolioId}]],
+
+            method: "PUT",
+
+            contentType: "application/json",
+
+            data: JSON.stringify({
+                tags: currentTags
+            }),
+
+            success: function () {
+                location.reload();
+            },
+
+            error: function (err) {
+                showErrorAlert(err);
+            }
+        });
+
+    }
+
 </script>
 
 </body>

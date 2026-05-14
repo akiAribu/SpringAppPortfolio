@@ -2,10 +2,8 @@ package org.example.springappportfolio.controllers.api.user;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.springappportfolio.dto.ContactDto;
-import org.example.springappportfolio.dto.CreateContactRequest;
-import org.example.springappportfolio.dto.PortfolioDto;
-import org.example.springappportfolio.dto.UpdatePortfolioRequest;
+import org.example.springappportfolio.dto.*;
+import org.example.springappportfolio.models.Specialization;
 import org.example.springappportfolio.repositories.UserRepository;
 import org.example.springappportfolio.services.ContactService;
 import org.example.springappportfolio.services.PortfolioService;
@@ -79,6 +77,24 @@ public class PortfolioApiController {
 
         return ResponseEntity.ok(
                 portfolioService.getMyPortfolio(authentication).contacts()
+        );
+
+    }
+
+    @GetMapping("/portfolios/search")
+    public ResponseEntity<List<PortfolioDto>> searchPortfolios(
+            @RequestParam(required = false) Specialization specialization,
+            @RequestParam(required = false) Integer minExperience,
+            @RequestParam(required = false) Integer maxExperience,
+            @RequestParam(required = false) List<String> tags
+    ) {
+
+        PortfolioSearchRequest request = new PortfolioSearchRequest(
+                specialization, minExperience, maxExperience, tags, null, null, null, null
+        );
+
+        return ResponseEntity.ok(
+                portfolioService.searchPortfolios(request)
         );
 
     }

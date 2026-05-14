@@ -2,6 +2,7 @@ package org.example.springappportfolio.mappers;
 
 import org.example.springappportfolio.dto.ProjectDto;
 import org.example.springappportfolio.dto.ProjectImageDto;
+import org.example.springappportfolio.dto.TagDto;
 import org.example.springappportfolio.models.Project;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +27,13 @@ public class ProjectMapper {
                 .map(projectImageMapper::toDto)
                 .toList();
 
+        List<TagDto> tags = project.getTags().stream()
+                .map(tagInProject -> new TagDto(
+                        tagInProject.getTag().getId(),
+                        tagInProject.getTag().getTagName()
+                ))
+                .toList();
+
         return new ProjectDto(
                 project.getId(),
                 project.getPortfolio().getId(),
@@ -36,7 +44,8 @@ public class ProjectMapper {
                 project.getIsVisible(),
                 project.getProjectPreview(),
                 project.getCreatedAt(),
-                images
+                images,
+                tags
         );
 
     }
@@ -51,6 +60,13 @@ public class ProjectMapper {
                 .map(projectImageMapper::toDto)
                 .toList();
 
+        List<TagDto> tags = project.getTags().stream()
+                .map(tagInProject -> new TagDto(
+                        tagInProject.getTag().getId(),
+                        tagInProject.getTag().getTagName()
+                ))
+                .toList();
+
         return new ProjectDto(
                 project.getId(),
                 portfolioId,
@@ -61,7 +77,8 @@ public class ProjectMapper {
                 project.getIsVisible(),
                 project.getProjectPreview(),
                 project.getCreatedAt(),
-                images
+                images,
+                tags
         );
 
     }

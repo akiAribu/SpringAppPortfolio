@@ -63,8 +63,9 @@ public class Portfolio {
     @Column(name = "bio", length = 2000)
     private String bio;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "specialization")
-    private String specialization;
+    private Specialization specialization;
 
     @Column(name = "experience_years")
     private Integer experienceYears;

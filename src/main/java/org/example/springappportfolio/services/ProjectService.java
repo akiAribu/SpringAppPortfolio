@@ -1,24 +1,23 @@
 package org.example.springappportfolio.services;
 
 import lombok.RequiredArgsConstructor;
-import org.example.springappportfolio.dto.CreateProjectImageRequest;
-import org.example.springappportfolio.dto.CreateProjectRequest;
-import org.example.springappportfolio.dto.ProjectDto;
-import org.example.springappportfolio.dto.UpdateProjectRequest;
+import org.example.springappportfolio.dto.*;
 import org.example.springappportfolio.exceptions.AccessDeniedException;
 import org.example.springappportfolio.exceptions.InternalServerErrorException;
 import org.example.springappportfolio.exceptions.NotFoundException;
 import org.example.springappportfolio.mappers.ProjectMapper;
-import org.example.springappportfolio.models.Project;
-import org.example.springappportfolio.models.ProjectImage;
+import org.example.springappportfolio.models.*;
 import org.example.springappportfolio.repositories.PortfolioRepository;
 import org.example.springappportfolio.repositories.ProjectRepository;
+import org.example.springappportfolio.repositories.TagRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +26,7 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final PortfolioRepository portfolioRepository;
     private final ProjectMapper projectMapper;
+    private final TagRepository tagRepository;
 
     public List<ProjectDto> getPortfolioProjects(Long portfolioId, boolean isOwner) {
 
@@ -276,6 +276,53 @@ public class ProjectService {
 
         return projectMapper.toDto(project);
 
+    }
+
+    public List<TagDto> getAvailableTags() {
+        return tagRepository.findAll().stream()
+                .map(tag -> new TagDto(
+                        tag.getId(),
+                        tag.getTagName()
+                ))
+                .toList();
+    }
+
+    @Transactional
+    public ProjectDto updateProjectTags(
+            Long portfolioId,
+            Long projectId,
+            List<String> tagNames,
+            boolean isOwner
+    ) {
+        validateOwnership(isOwner);
+
+        Project project = getProjectByPortfolio(projectId, portfolioId);
+
+        project.getTags().clear();
+        projectRepository.flush();
+
+        for (String tagName : tagNames) {
+
+            Tag tag = tagRepository.findByTagName(tagName)
+                    .orElseThrow(() -> new NotFoundException("Tag", tagName));
+
+            TagInProject relation = new TagInProject();
+
+            relation.setProject(project);
+            relation.setTag(tag);
+
+            TagInProjectId id = new TagInProjectId();
+            id.setProjectId(project.getId().intValue());
+            id.setTagId(tag.getId());
+            relation.setId(id);
+
+            project.getTags().add(relation);
+
+        }
+
+        projectRepository.save(project);
+
+        return projectMapper.toDto(project);
     }
 
 }

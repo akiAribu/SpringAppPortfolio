@@ -21,7 +21,7 @@ public class Project {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "project_id", nullable = false)
-    private Integer id;
+    private Long id;
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -54,7 +54,11 @@ public class Project {
     private Instant createdAt;
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "project")
+    @OneToMany(
+            mappedBy = "project",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private Set<TagInProject> tags = new LinkedHashSet<>();
 
     @ToString.Exclude

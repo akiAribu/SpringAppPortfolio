@@ -1,14 +1,17 @@
 package org.example.springappportfolio.models;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "tags")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Tag {
 
     @Id
@@ -19,8 +22,9 @@ public class Tag {
     @Column(name = "tag_name", nullable = false)
     private String tagName;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "tag_type", nullable = false)
-    private String tagType;
+    private TagType tagType;
 
     @OneToMany(mappedBy = "tag")
     private Set<TagInProject> projects = new LinkedHashSet<>();

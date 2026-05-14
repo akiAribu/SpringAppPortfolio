@@ -8,6 +8,8 @@
 
 <h2>Edit Profile</h2>
 
+<a href="/profile">Back to Profile</a>
+
 <div style="margin-bottom: 30px;">
     <h3>Basic Info</h3>
     <input type="text" id="username" th:value="${user.username}" style="width: 300px;"/>
@@ -16,8 +18,28 @@
     <input type="email" id="email" th:value="${user.email}" style="width: 300px;"/>
     <div id="emailError" class="field-error" style="display:none;"></div>
     <br><br>
+    <input type="text" id="firstName" placeholder="First Name" th:value="${user.firstName != null ? user.firstName : ''}" style="width: 300px;"/>
+    <br><br>
+    <input type="text" id="lastName" placeholder="Last Name" th:value="${user.lastName != null ? user.lastName : ''}" style="width: 300px;"/>
+    <br><br>
     <button onclick="updateProfile()">Save Profile</button>
     <p id="profileResult"></p>
+</div>
+
+<hr>
+
+<div style="margin-bottom: 30px;">
+    <h3>Portfolio Info</h3>
+    <input type="text" id="specialization" list="specializationList" placeholder="Select or type specialization" style="width: 300px;" autocomplete="off"/>
+    <div id="specializationError" class="field-error" style="display: none;"></div>
+    <datalist id="specializationList"></datalist>
+    <br><br>
+    <input type="number" id="experienceYears" placeholder="Experience (years)" th:value="${portfolio.experienceYears != null ? portfolio.experienceYears : ''}" style="width: 300px;" min="0"/>
+    <br><br>
+    <textarea id="bio" placeholder="Bio" rows="4" style="width: 300px;" th:text="${portfolio.bio != null ? portfolio.bio : ''}"></textarea>
+    <br><br>
+    <button onclick="updatePortfolio()">Save Portfolio</button>
+    <p id="portfolioResult"></p>
 </div>
 
 <hr>
@@ -56,11 +78,6 @@
     <p id="passwordResult"></p>
 </div>
 
-<hr>
-
-<br>
-<a href="/profile">Back to Profile</a>
-
 <script>
     function parseError(err) {
         let result = { message: "", fieldErrors: [] };
@@ -93,7 +110,9 @@
         clearAllErrors();
         const data = {
             username: $("#username").val(),
-            email: $("#email").val()
+            email: $("#email").val(),
+            firstName: $("#firstName").val(),
+            lastName: $("#lastName").val()
         };
 
         $.ajax({
@@ -146,6 +165,27 @@
                     container.append(html);
                 });
             }
+        });
+    }
+
+    function loadSpecializations() {
+        $.ajax({
+           url: "/api/v1/specializations",
+           method: "GET",
+           success: function (specializations) {
+               const datalist = $("#specializationList");
+               datalist.empty();
+
+               specializations.forEach(spec => {
+                   datalist.append(`<option value="${spec.displayName}" data-code="${spec.code}"></option>`);
+               });
+
+               const currentSpec = "[[${portfolio.specialization != null ? portfolio.specialization.displayName : ''}]]";
+               if (currentSpec) {
+                   $("#specialization").val(currentSpec);
+               }
+
+           }
         });
     }
 
@@ -204,6 +244,39 @@
         });
     }
 
+    function updatePortfolio() {
+        clearAllErrors();
+
+        const selectedDisplayName = $("#specialization").val();
+        const selectedOption = $(`#specializationList option[value="${selectedDisplayName}"]`);
+        const specCode = selectedOption.data("code") || selectedDisplayName;
+
+        const data = {
+            specialization: specCode,
+            experienceYears: $("#experienceYears").val() ? parseInt($("#experienceYears").val()) : null,
+            bio: $("#bio").val()
+        };
+
+        $.ajax({
+            url: "/api/v1/portfolios/me",
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function () {
+                $("#portfolioResult").text("Portfolio updated").css("color", "green");
+            },
+            error: function (err) {
+                const errorData = parseError(err);
+                if (errorData.fieldErrors.length > 0) {
+                    errorData.fieldErrors.forEach(e => {
+                        showFieldError(e.field + "Error", e.message);
+                    })
+                }
+                $("#portfolioResult").text(errorData.message).css("color", "red");
+            }
+        });
+    }
+
     function changePassword() {
         clearAllErrors();
         const data = {
@@ -237,6 +310,7 @@
 
     $(document).ready(function () {
         loadContacts();
+        loadSpecializations();
     })
 </script>
 

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.springappportfolio.config.UserPrincipal;
 import org.example.springappportfolio.dto.PortfolioDto;
 import org.example.springappportfolio.dto.ProjectDto;
+import org.example.springappportfolio.dto.TagDto;
 import org.example.springappportfolio.models.User;
 import org.example.springappportfolio.services.PortfolioService;
 import org.example.springappportfolio.services.ProjectService;
@@ -52,7 +53,10 @@ public class PortfolioPageController {
         Long userId = ((UserPrincipal) authentication.getPrincipal()).getId();
 
         User user = userService.findById(userId);
+        PortfolioDto portfolio = portfolioService.getMyPortfolio(authentication);
+
         model.addAttribute("user", user);
+        model.addAttribute("portfolio", portfolio);
 
         return "edit_profile";
     }
@@ -95,6 +99,11 @@ public class PortfolioPageController {
         model.addAttribute("userId", portfolio.userId());
         model.addAttribute("isOwner", isOwner);
         model.addAttribute("images", images);
+
+        List<String> projectTagNames = project.tags() != null
+                ? project.tags().stream().map(TagDto::name).toList()
+                : List.of();
+        model.addAttribute("projectTagNames", projectTagNames);
 
         return "project_detail";
     }

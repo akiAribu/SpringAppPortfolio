@@ -40,6 +40,10 @@
 <div th:if="${portfolio != null}">
     <p><b>Username:</b> <span th:text="${portfolio.username}"></span></p>
     <p><b>Email:</b> <span th:text="${portfolio.email}"></span></p>
+    <p><b>Name:</b> <span th:text="${portfolio.firstName != null ? portfolio.firstName : ''} + ' ' + ${portfolio.lastName != null ? portfolio.lastName : ''}"></span></p>
+    <p th:if="${portfolio.specialization != null}"><b>Specialization:</b> <span th:text="${portfolio.specialization.getDisplayName()}"></span></p>
+    <p th:if="${portfolio.experienceYears != null}"><b>Experience:</b> <span th:text="${portfolio.experienceYears != 0 ? portfolio.experienceYears + ' years' : 'Без опыта'}"></span> </p>
+    <p th:if="${portfolio.bio != null && !portfolio.bio.isEmpty()}"><b>Bio:</b> <span th:text="${portfolio.bio}"></span></p>
     <p><b>Public:</b> <span th:text="${portfolio.isPublic ? 'Yes' : 'No'}"></span></p>
     <p><b>Views:</b> <span th:text="${portfolio.viewsCount}"></span></p>
 </div>

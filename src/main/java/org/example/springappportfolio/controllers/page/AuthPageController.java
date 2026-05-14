@@ -23,29 +23,6 @@ public class AuthPageController {
         return "auth/login";
     }
 
-//    @PostMapping("/login")
-//    public String login(
-//            @Valid @ModelAttribute LoginRequest request,
-//            BindingResult bindingResult,
-//            Model model) {
-//
-//        if (bindingResult.hasErrors()) {
-//            model.addAttribute("errors", bindingResult.getAllErrors().get(0).getDefaultMessage());
-//            return "auth/login";
-//        }
-//
-//        try {
-//            AuthResponse response = authService.login(request);
-//            model.addAttribute("user", response);
-//
-//            return "redirect:/profile";
-//        } catch (Exception e) {
-//            model.addAttribute("errors", e.getMessage());
-//            return "auth/login";
-//        }
-//
-//    }
-
     @GetMapping("/register")
     public String registerPage() {
         return "auth/register";

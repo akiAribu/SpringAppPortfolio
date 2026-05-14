@@ -1,5 +1,7 @@
 package org.example.springappportfolio.dto;
 
+import org.example.springappportfolio.models.Specialization;
+
 import java.time.Instant;
 import java.util.List;
 
@@ -14,7 +16,7 @@ public record PortfolioDto (
         Integer viewsCount,
         Boolean isPublic,
         String bio,
-        String specialization,
+        Specialization specialization,
         Integer experienceYears,
         Instant createdAt,
         Instant updatedAt,

@@ -263,4 +263,34 @@ public class ProjectApiController {
 
     }
 
+    @GetMapping("/tags")
+    public ResponseEntity<List<TagDto>> getAllTags() {
+        return ResponseEntity.ok(
+                projectService.getAvailableTags()
+        );
+    }
+
+    @PutMapping("/projects/{projectId}/tags")
+    public ResponseEntity<ProjectDto> updateProjectTags(
+        @PathVariable Long projectId,
+        @RequestParam Long portfolioId,
+        @RequestBody UpdateProjectTagsRequest request,
+        Authentication authentication
+    ) {
+        Long myPortfolioId = portfolioService.getPortfolioId(authentication);
+
+        if (!myPortfolioId.equals(portfolioId)) {
+            throw new AccessDeniedException();
+        }
+
+        return ResponseEntity.ok(
+                projectService.updateProjectTags(
+                        portfolioId,
+                        projectId,
+                        request.tags(),
+                        true
+                )
+        );
+    }
+
 }

@@ -10,13 +10,19 @@
 <br><br>
 
 <div th:if="${portfolio != null}">
-    <h3>User</h3>
-    <p><b>Username:</b> <span th:text="${portfolio.username}"></span></p>
-
     <h3>Avatar</h3>
     <img id="avatar" th:src="'/api/v1/users/' + ${portfolio.userId} + '/avatar'"
          style="width:150px;height:150px;border-radius:50%"
          onerror="this.src='/api/v1/users/me/avatar'"/>
+
+    <h3>User</h3>
+    <p><b>Username:</b> <span th:text="${portfolio.username}"></span></p>
+    <p th:if="${portfolio.firstName != null or portfolio.lastName != null}">
+        <b>Name:</b> <span th:text="${portfolio.firstName != null ? portfolio.firstName : ''} + ' ' + ${portfolio.lastName != null ? portfolio.lastName : ''}"></span>
+    </p>
+    <p th:if="${portfolio.specialization != null}"><b>Specialization:</b> <span th:text="${portfolio.specialization.getDisplayName()}"></span></p>
+    <p th:if="${portfolio.experienceYears != null}"><b>Experience:</b> <span th:text="${portfolio.experienceYears}"></span> years</p>
+    <p th:if="${portfolio.bio != null && !portfolio.bio.isEmpty()}"><b>Bio:</b> <span th:text="${portfolio.bio}"></span></p>
 
     <h3>Contacts</h3>
     <div id="contactsContainer">

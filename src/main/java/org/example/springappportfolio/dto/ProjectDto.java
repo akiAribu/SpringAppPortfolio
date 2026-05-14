@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 public record ProjectDto(
-        Integer projectId,
+        Long projectId,
         Long portfolioId,
         String title,
         String shortDescription,
@@ -13,5 +13,6 @@ public record ProjectDto(
         Boolean isVisible,
         byte[] preview,
         Instant createdAt,
-        List<ProjectImageDto> images
+        List<ProjectImageDto> images,
+        List<TagDto> tags
 ) {}

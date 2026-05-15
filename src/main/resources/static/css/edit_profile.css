@@ -1,0 +1,328 @@
+:root {
+    --bg: #f5f7fb;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --primary: #111827;
+    --primary-hover: #1f2937;
+    --danger: #ef4444;
+
+    --shadow:
+            0 10px 30px rgba(0,0,0,0.05);
+
+    --radius: 20px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family:
+            Inter,
+            system-ui,
+            sans-serif;
+
+    background: var(--bg);
+    color: var(--text);
+}
+
+.topbar {
+    height: 80px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 40px;
+
+    background: rgba(255,255,255,0.8);
+
+    backdrop-filter: blur(12px);
+
+    border-bottom: 1px solid var(--border);
+
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.layout {
+    display: grid;
+
+    grid-template-columns: 320px 1fr;
+
+    gap: 32px;
+
+    padding: 40px;
+
+    align-items: start;
+}
+
+.sidebar {
+    position: sticky;
+    top: 110px;
+}
+
+.profile-preview-card,
+.settings-card {
+    background: var(--card);
+
+    border-radius: var(--radius);
+
+    padding: 28px;
+
+    border: 1px solid var(--border);
+
+    box-shadow: var(--shadow);
+}
+
+.settings-card {
+    margin-bottom: 28px;
+}
+
+.avatar-wrapper {
+    display: flex;
+    justify-content: center;
+
+    margin-bottom: 24px;
+}
+
+.avatar-wrapper img {
+    width: 140px;
+    height: 140px;
+
+    object-fit: cover;
+
+    border-radius: 50%;
+
+    border: 5px solid white;
+
+    box-shadow:
+            0 8px 20px rgba(0,0,0,0.08);
+}
+
+.profile-preview-info {
+    text-align: center;
+}
+
+.profile-preview-info h2 {
+    font-size: 28px;
+
+    margin-bottom: 10px;
+}
+
+.profile-preview-info p {
+    color: var(--muted);
+}
+
+.card-header {
+    margin-bottom: 28px;
+}
+
+.card-header h2 {
+    font-size: 28px;
+
+    margin-bottom: 8px;
+}
+
+.card-header p {
+    color: var(--muted);
+}
+
+.form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(240px, 1fr));
+
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 22px;
+}
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 10px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    color: #374151;
+}
+
+input,
+textarea {
+    width: 100%;
+
+    padding: 14px 16px;
+
+    border-radius: 14px;
+
+    border: 1px solid var(--border);
+
+    background: white;
+
+    font-size: 15px;
+
+    transition: 0.2s ease;
+}
+
+input:focus,
+textarea:focus {
+    outline: none;
+
+    border-color: #9ca3af;
+
+    box-shadow:
+            0 0 0 4px rgba(17,24,39,0.05);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 140px;
+}
+
+.primary-btn,
+.secondary-btn,
+.back-button {
+    border: none;
+
+    border-radius: 14px;
+
+    padding: 14px 20px;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.primary-btn {
+    background: var(--primary);
+    color: white;
+}
+
+.primary-btn:hover {
+    background: var(--primary-hover);
+}
+
+.secondary-btn {
+    background: #f3f4f6;
+    color: var(--text);
+}
+
+.back-button {
+    background: #f3f4f6;
+    color: var(--text);
+}
+
+.back-button:hover,
+.secondary-btn:hover {
+    background: #e5e7eb;
+}
+
+.contacts-list {
+    margin-bottom: 24px;
+}
+
+.contact-item {
+    padding: 16px;
+
+    border-radius: 16px;
+
+    background: #f9fafb;
+
+    border: 1px solid var(--border);
+
+    margin-bottom: 14px;
+}
+
+.contact-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 10px;
+}
+
+.contact-type {
+    font-size: 13px;
+    font-weight: 700;
+
+    color: var(--muted);
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.04em;
+}
+
+.contact-value {
+    margin-bottom: 14px;
+
+    word-break: break-word;
+}
+
+.contact-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.field-error {
+    margin-top: 8px;
+
+    color: #dc2626;
+
+    font-size: 13px;
+
+    display: none;
+}
+
+.result-message {
+    margin-top: 16px;
+
+    font-size: 14px;
+}
+
+.empty-text {
+    color: var(--muted);
+}
+
+@media (max-width: 992px) {
+
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        position: relative;
+        top: auto;
+    }
+
+}
+
+@media (max-width: 640px) {
+
+    .layout {
+        padding: 20px;
+    }
+
+    .topbar {
+        padding: 0 20px;
+    }
+
+}

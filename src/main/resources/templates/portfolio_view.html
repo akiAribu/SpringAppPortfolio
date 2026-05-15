@@ -1,64 +1,224 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>Portfolio</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <link rel="stylesheet" href="/css/portfolio_view.css">
 </head>
+
 <body>
-<h2>Portfolio</h2>
-<a href="/profile">My Profile</a>
-<br><br>
 
-<div th:if="${portfolio != null}">
-    <h3>Avatar</h3>
-    <img id="avatar" th:src="'/api/v1/users/' + ${portfolio.userId} + '/avatar'"
-         style="width:150px;height:150px;border-radius:50%"
-         onerror="this.src='/api/v1/users/me/avatar'"/>
+<header class="topbar">
 
-    <h3>User</h3>
-    <p><b>Username:</b> <span th:text="${portfolio.username}"></span></p>
-    <p th:if="${portfolio.firstName != null or portfolio.lastName != null}">
-        <b>Name:</b> <span th:text="${portfolio.firstName != null ? portfolio.firstName : ''} + ' ' + ${portfolio.lastName != null ? portfolio.lastName : ''}"></span>
-    </p>
-    <p th:if="${portfolio.specialization != null}"><b>Specialization:</b> <span th:text="${portfolio.specialization.getDisplayName()}"></span></p>
-    <p th:if="${portfolio.experienceYears != null}"><b>Experience:</b> <span th:text="${portfolio.experienceYears}"></span> years</p>
-    <p th:if="${portfolio.bio != null && !portfolio.bio.isEmpty()}"><b>Bio:</b> <span th:text="${portfolio.bio}"></span></p>
+    <div class="topbar-left">
 
-    <h3>Contacts</h3>
-    <div id="contactsContainer">
-        <div th:each="contact : ${portfolio.contacts}">
-            <p>
-                <b th:text="${contact.contactType}"></b>:
-                <span th:text="${contact.contactValue}"></span>
-            </p>
-        </div>
-        <p th:if="${#lists.isEmpty(portfolio.contacts)}">No contacts</p>
+        <a href="/"
+           class="back-button">
+            ← Home
+        </a>
+
     </div>
 
-    <p><b>Public:</b> <span th:text="${portfolio.isPublic ? 'Yes' : 'No'}"></span></p>
-    <p><b>Views:</b> <span th:text="${portfolio.viewsCount}"></span></p>
+    <div class="topbar-right">
 
-    <hr>
-    <h3>Projects</h3>
-    <div th:if="${not #lists.isEmpty(portfolio.projects)}" style="display: flex; flex-wrap: wrap; gap: 15px;">
-        <div th:each="project : ${portfolio.projects}"
-             style="border: 1px solid #ccc; padding: 15px; width: 250px; border-radius: 8px;">
-            <a th:href="'/project/' + ${project.projectId} + '?portfolioId=' + ${portfolio.portfolioId}" style="text-decoration: none; color: inherit;">
-                <div th:if="${project.preview}" style="text-align: center; margin-bottom: 10px;">
-                    <img th:src="'/api/v1/projects/' + ${project.projectId} + '/preview?portfolioId=' + ${portfolio.portfolioId}"
-                         style="max-width: 100%; max-height: 150px; border-radius: 4px;"/>
+        <a href="/profile"
+           class="primary-btn">
+            My Profile
+        </a>
+
+    </div>
+
+</header>
+
+<main class="layout">
+
+    <aside class="sidebar"
+           th:if="${portfolio != null}">
+
+        <div class="profile-card">
+
+            <div class="avatar-wrapper">
+
+                <img id="avatar"
+                     th:src="@{'/api/v1/users/' + ${portfolio.userId} + '/avatar'}"
+                     alt="Avatar"
+                     onerror="this.src='/api/v1/users/me/avatar'">
+
+            </div>
+
+            <div class="profile-info">
+
+                <h2>
+
+                    <span th:text="${portfolio.firstName != null ? portfolio.firstName : ''}"></span>
+
+                    <span th:text="${portfolio.lastName != null ? portfolio.lastName : ''}"></span>
+
+                </h2>
+
+                <p class="username"
+                   th:text="'@' + ${portfolio.username}">
+                </p>
+
+                <p class="specialization"
+                   th:if="${portfolio.specialization != null}"
+                   th:text="${portfolio.specialization.getDisplayName()}">
+                </p>
+
+                <div class="stats">
+
+                    <div class="stat-box">
+
+                        <span class="stat-value"
+                              th:text="${portfolio.viewsCount}">
+                        </span>
+
+                        <span class="stat-label">
+                            Views
+                        </span>
+
+                    </div>
+
+                    <div class="stat-box"
+                         th:if="${portfolio.experienceYears != null}">
+
+                        <span class="stat-value"
+                              th:text="${portfolio.experienceYears}">
+                        </span>
+
+                        <span class="stat-label">
+                            Years
+                        </span>
+
+                    </div>
+
                 </div>
-                <h4 th:text="${project.title}" style="margin: 5px 0;"></h4>
-                <p th:text="${project.shortDescription}" style="font-size: 14px; color: #666;"></p>
-            </a>
-        </div>
-    </div>
-    <p th:if="${#lists.isEmpty(portfolio.projects)}">No projects</p>
-</div>
 
-<div th:if="${error}">
-    <p style="color:red;" th:text="${error}"></p>
-</div>
+                <div class="bio"
+                     th:if="${portfolio.bio != null && !portfolio.bio.isEmpty()}">
+
+                    <p th:text="${portfolio.bio}"></p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <section class="contacts-card">
+
+            <h3>Contacts</h3>
+
+            <div id="contactsContainer">
+
+                <div class="contact-item"
+                     th:each="contact : ${portfolio.contacts}">
+
+                    <div class="contact-type"
+                         th:text="${contact.contactType}">
+                    </div>
+
+                    <div class="contact-value"
+                         th:text="${contact.contactValue}">
+                    </div>
+
+                </div>
+
+                <p class="empty-text"
+                   th:if="${#lists.isEmpty(portfolio.contacts)}">
+
+                    No contacts
+
+                </p>
+
+            </div>
+
+        </section>
+
+    </aside>
+
+    <section class="content-area">
+
+        <div class="content-header">
+
+            <div>
+
+                <h1 class="page-title">
+                    Portfolio Projects
+                </h1>
+
+                <p class="page-subtitle">
+                    Explore all published works
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="projects-grid"
+             th:if="${not #lists.isEmpty(portfolio.projects)}">
+
+            <div class="project-card"
+                 th:each="project : ${portfolio.projects}">
+
+                <a th:href="'/project/' + ${project.projectId} + '?portfolioId=' + ${portfolio.portfolioId}"
+                   class="project-link">
+
+                    <div th:if="${project.preview}">
+
+                        <img class="project-image"
+                             th:src="'/api/v1/projects/' + ${project.projectId} + '/preview?portfolioId=' + ${portfolio.portfolioId}"
+                             alt="Project Preview">
+
+                    </div>
+
+                    <div th:unless="${project.preview}"
+                         class="project-image project-placeholder">
+
+                        No Preview
+
+                    </div>
+
+                    <div class="project-body">
+
+                        <h3 class="project-title"
+                            th:text="${project.title}">
+                        </h3>
+
+                        <p class="project-description"
+                           th:text="${project.shortDescription}">
+                        </p>
+
+                    </div>
+
+                </a>
+
+            </div>
+
+        </div>
+
+        <div class="empty-state"
+             th:if="${#lists.isEmpty(portfolio.projects)}">
+
+            No projects yet
+
+        </div>
+
+        <div class="error-box"
+             th:if="${error}">
+
+            <p th:text="${error}"></p>
+
+        </div>
+
+    </section>
+
+</main>
 
 </body>
 </html>

@@ -1,395 +1,205 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8">
     <title th:text="${project.title}">Project</title>
+
+    <link rel="stylesheet" href="/css/project_detail.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+
 <body>
-<h2>Project Details</h2>
-<a th:href="${isOwner} ? '/profile' : '/u/' + ${userId}">Back to Portfolio</a>
-<br><br>
 
-<div th:if="${project != null}">
-    <h1 th:text="${project.title}"></h1>
+<header class="topbar">
+    <a class="back-button"
+       th:href="${isOwner} ? '/profile' : '/u/' + ${userId}">
+        ← Back
+    </a>
 
-    <div th:if="${project.preview}" style="text-align: center; margin: 20px 0;">
-        <img th:src="'/api/v1/projects/' + ${project.projectId} + '/preview?portfolioId=' + ${portfolioId}"
-             style="max-width: 100%; max-height: 400px;"/>
-    </div>
+    <h1 class="top-title" th:text="${project.title}"></h1>
+</header>
 
-    <div th:if="${isOwner}" style="margin: 20px 0;">
-        <h4>Update Preview Image</h4>
-        <input type="file" id="previewFile" accept="image/*"/>
-        <br><br>
-        <button onclick="uploadPreview()">Upload Preview</button>
-        <p id="previewResult"></p>
-    </div>
+<main class="project-layout">
 
-    <div style="margin-top: 30px;">
-        <h3>Technologies</h3>
+    <section class="project-main">
 
-        <div id="projectTags"
-             style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+        <div class="hero-card" th:if="${project.preview}">
+            <img th:src="'/api/v1/projects/' + ${project.projectId} + '/preview?portfolioId=' + ${portfolioId}"
+                 alt="preview">
         </div>
 
-        <div th:if="${isOwner}">
-            <h4>Add Technologies</h4>
+        <div class="card" th:if="${isOwner}">
+            <h3>Preview</h3>
 
-            <div id="tagsCheckboxes"
-                 style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+            <input type="file" id="previewFile" accept="image/*">
+
+            <button class="btn-primary" onclick="uploadPreview()">
+                Upload Preview
+            </button>
+
+            <p id="previewResult"></p>
+        </div>
+
+        <div class="card">
+            <h3>Technologies</h3>
+
+            <div id="projectTags"></div>
+
+            <div th:if="${isOwner}">
+                <h4>Add tags</h4>
+
+                <div class="tag-dropdown">
+                    <button type="button"
+                            class="tag-dropdown-button"
+                            onclick="toggleTagsDropdown()">
+                        <span>Select technologies</span>
+                        <span>▼</span>
+                    </button>
+
+                    <div id="tagsDropdownMenu" class="tag-dropdown-menu">
+                        <div id="tagsCheckboxes" class="tags-grid"></div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="saveTags()">
+                    Save
+                </button>
+
+                <p id="tagsResult"></p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Description</h3>
+            <p class="text-block" th:text="${project.fullDescription}"></p>
+        </div>
+
+        <div class="card">
+            <h3>Gallery</h3>
+
+            <div class="gallery">
+
+                <div class="gallery-item"
+                     th:each="image : ${project.images}"
+                     th:attr="data-image-url='/api/v1/projects/' + ${project.projectId} + '/image/' + ${image.imageId} + '?portfolioId=' + ${portfolioId},
+                              data-image-caption=${image.imageCaption},
+                              data-image-id=${image.imageId}"
+                     onclick="openImageModal(this)">
+
+                    <img th:src="'/api/v1/projects/' + ${project.projectId} + '/image/' + ${image.imageId} + '?portfolioId=' + ${portfolioId}">
+                </div>
+
             </div>
 
-            <button onclick="saveTags()">Save Tags</button>
+            <p th:if="${#lists.isEmpty(project.images)}" class="muted">
+                No images in gallery
+            </p>
 
-            <p id="tagsResult"></p>
-        </div>
-    </div>
+            <div th:if="${isOwner}" class="upload-box">
+                <input type="file" id="imageFile">
+                <input type="text" id="imageCaption" placeholder="Caption">
 
-    <h3>Description</h3>
-    <p th:text="${project.fullDescription}" style="white-space: pre-wrap;"></p>
+                <button class="btn-primary" onclick="addImage()">
+                    Add Image
+                </button>
 
-    <div style="margin-top: 30px;">
-        <h3>Gallery</h3>
-        <div th:if="${not #lists.isEmpty(project.images)}" style="display: flex; flex-wrap: wrap; gap: 15px;">
-            <div th:each="image : ${project.images}" style="border: 1px solid #ccc; padding: 10px; border-radius: 8px;">
-                <img th:src="'/api/v1/projects/' + ${project.projectId} + '/image/' + ${image.imageId} + '?portfolioId=' + ${portfolioId}"
-                     style="max-width: 300px; max-height: 200px;"/>
-                <div th:if="${image.imageCaption}" style="margin-top: 5px; font-size: 14px; color: #666;">
-                    <span th:text="${image.imageCaption}"></span>
-                </div>
-                <div th:if="${isOwner}" style="margin-top: 5px;">
-                    <button th:onclick="'deleteImage(' + ${image.imageId} + ')'" style="font-size: 12px;">Delete</button>
-                </div>
+                <p id="imageResult"></p>
             </div>
-        </div>
-        <p th:if="${#lists.isEmpty(project.images)}">No images in gallery</p>
 
-        <div th:if="${isOwner}" style="margin-top: 15px; padding: 15px; border: 1px dashed #ccc;">
-            <h4>Add Image</h4>
-            <input type="file" id="imageFile" accept="image/*"/>
-            <br><br>
-            <input type="text" id="imageCaption" placeholder="Image caption (optional)" style="width: 300px;"/>
-            <br><br>
-            <button onclick="addImage()">Add Image</button>
-            <p id="imageResult"></p>
         </div>
+
+        <div class="card" th:if="${project.projectLink}">
+            <a class="btn-link"
+               th:href="${project.projectLink}"
+               target="_blank">
+                Open Project
+            </a>
+        </div>
+
+    </section>
+
+    <aside class="project-sidebar" th:if="${isOwner}">
+
+        <div class="card sticky">
+
+            <h3>Owner Controls</h3>
+
+            <button class="btn-secondary" onclick="showEditForm()">
+                Edit
+            </button>
+
+            <button class="btn-danger" onclick="deleteProject()">
+                Delete
+            </button>
+
+        </div>
+
+    </aside>
+
+</main>
+
+<div id="editModalOverlay" class="edit-modal-overlay">
+
+    <div class="edit-modal">
+
+        <h1>Edit project</h1>
+
+        <input id="editTitle" th:value="${project.title}">
+
+        <textarea id="editShortDescription"
+                  th:text="${project.shortDescription}"></textarea>
+
+        <textarea id="editFullDescription"
+                  th:text="${project.fullDescription}"></textarea>
+
+        <input id="editLink"
+               th:value="${project.projectLink}">
+
+        <div class="modal-actions">
+            <button class="btn-primary" onclick="updateProject()">Save</button>
+            <button class="btn-secondary" onclick="hideEditForm()">Cancel</button>
+        </div>
+
+        <p id="editResult"></p>
+
     </div>
 
-    <div th:if="${project.projectLink}" style="margin-top: 20px;">
-        <a th:href="${project.projectLink}" target="_blank">
-            <button style="padding: 10px 20px; font-size: 16px;">View Project</button>
-        </a>
-    </div>
-
-    <div th:if="${isOwner}" style="margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;">
-        <h3>Owner Controls</h3>
-        <button th:onclick="'showEditForm()'">Edit Project</button>
-        <button th:onclick="'deleteProject()'">Delete Project</button>
-
-        <div id="editForm" style="display:none; margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
-            <h4>Edit Project</h4>
-            <input type="text" id="editTitle" th:value="${project.title}" placeholder="Title" style="width: 300px;"/>
-            <br><br>
-            <textarea id="editShortDescription" rows="2" style="width: 300px;" th:text="${project.shortDescription}"></textarea>
-            <br><br>
-            <textarea id="editFullDescription" rows="5" style="width: 300px;" th:text="${project.fullDescription}"></textarea>
-            <br><br>
-            <input type="text" id="editLink" th:value="${project.projectLink}" placeholder="Project Link" style="width: 300px;"/>
-            <br><br>
-            <button onclick="updateProject()">Save</button>
-            <button onclick="hideEditForm()">Cancel</button>
-            <p id="editResult"></p>
-        </div>
-    </div>
 </div>
 
-<div th:if="${error}">
-    <p style="color:red;" th:text="${error}"></p>
+<div id="imageModalOverlay" class="modal-overlay">
+
+    <div class="image-modal">
+
+        <div class="image-modal-content">
+
+            <img id="modalImage" src="" alt="">
+
+            <div class="image-modal-footer">
+
+                <div id="modalImageCaption" class="image-caption"></div>
+
+                <button id="modalDeleteButton"
+                        class="btn-danger"
+                        style="display:none;">
+                    Delete
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
 <script th:inline="javascript">
-
-    $(document).ready(function () {
-        loadAvailableTags();
-        renderCurrentTags();
-    });
-
-    function showError(elementId, err) {
-        let message = err.responseText;
-        try {
-            const json = JSON.parse(err.responseText);
-            if (json.errors && json.errors.length > 0) {
-                message = json.errors.map(e => e.field + ": " + e.message).join("\n");
-            } else if (json.message) {
-                message = json.message;
-            }
-        } catch (e) {}
-        $("#" + elementId).text(message).css("color", "red");
-    }
-
-    function showErrorAlert(err) {
-        let message = err.responseText;
-        try {
-            const json = JSON.parse(err.responseText);
-            message = json.message || json.errorCode || err.responseText;
-        } catch (e) {}
-        alert(message);
-    }
-
-    function showEditForm() {
-        $("#editForm").show();
-    }
-
-    function hideEditForm() {
-        $("#editForm").hide();
-        $("#editResult").text("");
-    }
-
-    function updateProject() {
-        const data = {
-            title: $("#editTitle").val(),
-            shortDescription: $("#editShortDescription").val(),
-            fullDescription: $("#editFullDescription").val(),
-            projectLink: $("#editLink").val()
-        };
-
-        $.ajax({
-            url: "/api/v1/projects/" + [[${project.projectId}]] + "?portfolioId=" + [[${portfolioId}]],
-            method: "PUT",
-            contentType: "application/json",
-            data: JSON.stringify(data),
-            success: function () {
-                location.reload();
-            },
-            error: function (err) {
-                showError("editResult", err);
-            }
-        });
-    }
-
-    function deleteProject() {
-        if (!confirm("Delete this project?")) {
-            return;
-        }
-
-        $.ajax({
-            url: "/api/v1/projects/" + [[${project.projectId}]] + "?portfolioId=" + [[${portfolioId}]],
-            method: "DELETE",
-            success: function () {
-                window.location.href = "/profile";
-            },
-            error: function (err) {
-                showErrorAlert(err);
-            }
-        });
-    }
-
-    function addImage() {
-        const file = $("#imageFile")[0].files[0];
-        if (!file) {
-            $("#imageResult").text("Please select a file");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("caption", $("#imageCaption").val());
-
-        $.ajax({
-            url: "/api/v1/projects/" + [[${project.projectId}]] + "/images?portfolioId=" + [[${portfolioId}]],
-            method: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function () {
-                $("#imageFile").val("");
-                $("#imageCaption").val("");
-                $("#imageResult").text("Image added");
-                location.reload();
-            },
-            error: function (err) {
-                showError("imageResult", err);
-            }
-        });
-    }
-
-    function deleteImage(imageId) {
-        if (!confirm("Delete this image?")) {
-            return;
-        }
-
-        $.ajax({
-            url: "/api/v1/projects/" + [[${project.projectId}]] + "/images/" + imageId + "?portfolioId=" + [[${portfolioId}]],
-            method: "DELETE",
-            success: function () {
-                location.reload();
-            },
-            error: function (err) {
-                alert(err.responseText);
-            }
-        });
-    }
-
-    function uploadPreview() {
-        const file = $("#previewFile")[0].files[0];
-        if (!file) {
-            $("#previewResult").text("Please select a file");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        $.ajax({
-            url: "/api/v1/projects/" + [[${project.projectId}]] + "/preview?portfolioId=" + [[${portfolioId}]],
-            method: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function () {
-                $("#previewFile").val("");
-                $("#previewResult").text("Preview updated");
-                location.reload();
-            },
-            error: function (err) {
-                showError("previewResult", err);
-            }
-        });
-    }
-
-    function renderCurrentTags() {
-
-        const tags = [[${projectTagNames}]];
-
-        const container = $("#projectTags");
-
-        container.empty();
-
-        if (!tags || tags.length === 0) {
-            container.append("<span>No technologies specified</span>");
-            return;
-        }
-
-        tags.forEach(tag => {
-
-            let html = `
-            <div style="
-                padding:6px 12px;
-                background:#eee;
-                border-radius:20px;
-                display:flex;
-                align-items:center;
-                gap:8px;
-            ">
-                <span>${tag}</span>
-        `;
-
-            if ([[${isOwner}]]) {
-                html += `
-                <button onclick="removeTag('${tag}')">
-                    x
-                </button>
-            `;
-            }
-
-            html += `</div>`;
-
-            container.append(html);
-        });
-    }
-
-    function loadAvailableTags() {
-
-        const currentTagNames = [[${projectTagNames}]];
-
-        $.ajax({
-            url: "/api/v1/tags",
-            method: "GET",
-            success: function (tags) {
-
-                const container = $("#tagsCheckboxes");
-
-                container.empty();
-
-                tags.forEach(tag => {
-
-                    const checked = currentTagNames.includes(tag.name) ? "checked" : "";
-
-                    container.append(`
-                    <label style="display:flex; gap:5px;">
-                        <input type="checkbox"
-                               value="${tag.name}" ${checked}>
-                        ${tag.name}
-                    </label>
-                `);
-
-                });
-
-            }
-        });
-
-    }
-
-    function saveTags() {
-
-        const selected = [];
-
-        $("#tagsCheckboxes input:checked").each(function () {
-            selected.push($(this).val());
-        });
-
-        $.ajax({
-            url: "/api/v1/projects/" + [[${project.projectId}]]
-                + "/tags?portfolioId=" + [[${portfolioId}]],
-
-            method: "PUT",
-
-            contentType: "application/json",
-
-            data: JSON.stringify({
-                tags: selected
-            }),
-
-            success: function () {
-                location.reload();
-            },
-
-            error: function (err) {
-                showError("tagsResult", err);
-            }
-        });
-
-    }
-
-    function removeTag(tagName) {
-
-        const currentTags = [[${projectTagNames}]]
-            .filter(t => t !== tagName);
-
-        $.ajax({
-            url: "/api/v1/projects/" + [[${project.projectId}]]
-                + "/tags?portfolioId=" + [[${portfolioId}]],
-
-            method: "PUT",
-
-            contentType: "application/json",
-
-            data: JSON.stringify({
-                tags: currentTags
-            }),
-
-            success: function () {
-                location.reload();
-            },
-
-            error: function (err) {
-                showErrorAlert(err);
-            }
-        });
-
-    }
-
+    window.projectId = [[${project.projectId}]];
+    window.portfolioId = [[${portfolioId}]];
+    window.isOwner = [[${isOwner}]];
+    window.projectTagNames = [[${projectTagNames}]];
 </script>
+
+<script src="/js/project_detail.js"></script>
 
 </body>
 </html>

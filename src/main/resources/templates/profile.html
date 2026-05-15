@@ -1,329 +1,191 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Profile</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Profile</title>
+
+    <link rel="stylesheet" href="/css/profile.css">
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+
 <body>
-<h2>Profile Page</h2>
 
-<div th:if="${isOwner}">
-    <a href="/profile/edit">Edit profile</a>
-    <br><br>
-</div>
-
-<div th:if="${isOwner}">
-    <a href="/logout">Logout</a>
-    <br><br>
-</div>
-
-<div th:if="${isOwner}">
-    <button onclick="togglePortfolioVisibility()">
-        Make Portfolio <span th:text="${portfolio.isPublic ? 'Private' : 'Public'}"></span>
-    </button>
-    <p id="visibilityResult"></p>
-    <hr>
-</div>
-
-<h3>Avatar</h3>
-<img id="avatar" src="/api/v1/users/me/avatar"
-     style="width:150px;height:150px;border-radius:50%"/>
-<br><br>
-
-<div th:if="${isOwner}">
-    <input type="file" id="avatarInput"/>
-    <button onclick="uploadAvatar()">Upload</button>
-</div>
-
-<hr>
-
-<div th:if="${portfolio != null}">
-    <p><b>Username:</b> <span th:text="${portfolio.username}"></span></p>
-    <p><b>Email:</b> <span th:text="${portfolio.email}"></span></p>
-    <p><b>Name:</b> <span th:text="${portfolio.firstName != null ? portfolio.firstName : ''} + ' ' + ${portfolio.lastName != null ? portfolio.lastName : ''}"></span></p>
-    <p th:if="${portfolio.specialization != null}"><b>Specialization:</b> <span th:text="${portfolio.specialization.getDisplayName()}"></span></p>
-    <p th:if="${portfolio.experienceYears != null}"><b>Experience:</b> <span th:text="${portfolio.experienceYears != 0 ? portfolio.experienceYears + ' years' : 'Без опыта'}"></span> </p>
-    <p th:if="${portfolio.bio != null && !portfolio.bio.isEmpty()}"><b>Bio:</b> <span th:text="${portfolio.bio}"></span></p>
-    <p><b>Public:</b> <span th:text="${portfolio.isPublic ? 'Yes' : 'No'}"></span></p>
-    <p><b>Views:</b> <span th:text="${portfolio.viewsCount}"></span></p>
-</div>
-
-<hr>
-
-<h3>Contacts</h3>
-<div id="contactsContainer"></div>
-<p id="contactsEmpty" style="display:none;">No contacts</p>
-
-<div style="margin-top: 10px;">
-    <a href="/profile/edit">Manage Contacts</a>
-</div>
-
-<hr>
-
-<div th:if="${isOwner}">
-    <h3>My Projects</h3>
-    <button onclick="showCreateProjectForm()">Add New Project</button>
-
-    <div id="createProjectForm" style="display:none; margin-top:15px; padding:15px; border:1px solid #ccc;">
-        <input type="text" id="projectTitle" placeholder="Project Title" style="width:300px;"/>
-        <br><br>
-        <textarea id="projectShortDesc" placeholder="Short Description" rows="2" style="width:300px;"></textarea>
-        <br><br>
-        <textarea id="projectFullDesc" placeholder="Full Description" rows="5" style="width:300px;"></textarea>
-        <br><br>
-        <input type="text" id="projectLink" placeholder="Project Link" style="width:300px;"/>
-        <br><br>
-        <label>Preview Image:</label>
-        <input type="file" id="projectPreview" accept="image/*"/>
-        <br><br>
-        <label><input type="checkbox" id="projectIsVisible" checked/> Visible</label>
-        <br><br>
-        <button onclick="createProject()">Create</button>
-        <button onclick="hideCreateProjectForm()">Cancel</button>
-        <p id="createProjectResult"></p>
+<header class="topbar">
+    <div class="topbar-left">
+        <a href="/" class="back-button">
+            ← Home
+        </a>
     </div>
 
-    <div id="projectsContainer" style="display:flex; flex-wrap:wrap; gap:15px; margin-top:15px;"></div>
-    <p id="noProjects" style="display:none;">No projects yet</p>
+    <div class="topbar-right" th:if="${isOwner}">
+        <button class="primary-btn" onclick="showCreateProjectForm()">
+            + New Project
+        </button>
+    </div>
+</header>
 
-    <hr>
-</div>
+<main class="layout">
 
-<script>
-    function showError(elementId, err) {
-        console.log("Error status:", err.status);
-        console.log("Response text:", err.responseText);
+    <aside class="sidebar">
 
-        let message = "An error occurred";
-        try {
-            if (err.responseText) {
-                const json = JSON.parse(err.responseText);
-                if (json.errors && json.errors.length > 0) {
-                    message = json.errors.map(e => e.field + ": " + e.message).join(", ");
-                } else if (json.message) {
-                    message = json.message;
-                } else if (json.errorCode) {
-                    message = json.errorCode;
-                }
-            }
-        } catch (e) {
-            message = err.responseText || "An error occurred";
-        }
-        $("#" + elementId).text(message).css("color", "red").css("white-space", "normal");
-    }
+        <div class="profile-card">
 
-    function togglePortfolioVisibility() {
-        const currentPublic = [[${portfolio.isPublic}]];
-        const newPublic = !currentPublic;
+            <div class="avatar-wrapper">
+                <img id="avatar"
+                     src="/api/v1/users/me/avatar"
+                     alt="Avatar">
+            </div>
 
-        $.ajax({
-            url: "/api/v1/portfolios/me",
-            method: "PUT",
-            contentType: "application/json",
-            data: JSON.stringify({isPublic: newPublic}),
+            <div class="profile-info">
 
-            success: function () {
-                location.reload();
-            },
+                <h2>
+                    <span th:text="${portfolio.firstName}"></span>
+                    <span th:text="${portfolio.lastName}"></span>
+                </h2>
 
-            error: function (err) {
-                showError("visibilityResult", err);
-            }
-        })
-    }
+                <p class="username"
+                   th:text="'@' + ${portfolio.username}">
+                </p>
 
-    function uploadAvatar() {
-        const file = $("#avatarInput")[0].files[0];
+                <p class="specialization"
+                   th:if="${portfolio.specialization != null}"
+                   th:text="${portfolio.specialization.getDisplayName()}">
+                </p>
 
-        if (!file) {
-            alert("Choose file");
-            return;
-        }
+                <div class="stats">
+                    <div class="stat-box">
+                        <span class="stat-value"
+                              th:text="${portfolio.viewsCount}"></span>
+                        <span class="stat-label">Views</span>
+                    </div>
 
-        const formData = new FormData();
-        formData.append("file", file);
+                    <div class="stat-box">
+                        <span class="stat-value"
+                              th:text="${portfolio.experienceYears}"></span>
+                        <span class="stat-label">Years</span>
+                    </div>
+                </div>
 
-        $.ajax({
-            url: "/api/v1/users/me/avatar",
-            method: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
+                <div class="bio"
+                     th:if="${portfolio.bio != null && !portfolio.bio.isEmpty()}">
+                    <p th:text="${portfolio.bio}"></p>
+                </div>
 
-            success: function () {
-                $("#avatar").attr("src",
-                    "/api/v1/users/me/avatar?t=" + new Date().getTime());
-            }
-        });
-    }
+            </div>
 
-    function loadContacts() {
+            <div class="sidebar-actions" th:if="${isOwner}">
 
-        $.ajax({
-            url: "/api/v1/portfolios/me/contacts",
-            method: "GET",
+                <label class="upload-btn">
+                    Upload Avatar
+                    <input type="file" id="avatarInput" hidden>
+                </label>
 
-            success: function (contacts) {
-                const container = $("#contactsContainer");
-                container.empty();
+                <button class="secondary-btn"
+                        onclick="uploadAvatar()">
+                    Save Avatar
+                </button>
 
-                if (!contacts || contacts.length === 0) {
-                    $("#contactsEmpty").show();
-                    return;
-                }
+                <button class="secondary-btn"
+                        onclick="togglePortfolioVisibility()">
+                    Toggle Visibility
+                </button>
 
-                $("#contactsEmpty").hide();
-                contacts.forEach(contact => {
-                    let html = `<div style="margin-bottom:10px">
-                        <b>${contact.contactType}</b>: <span>${contact.contactValue}</span>
-                    </div>`;
-                    container.append(html);
-                });
+                <a href="/profile/edit" class="secondary-btn link-btn">
+                    Edit Profile
+                </a>
 
-            }
+                <a href="/logout" class="danger-btn">
+                    Logout
+                </a>
 
-        });
+            </div>
 
-    }
+        </div>
 
-    $(document).ready(function () {
-        loadContacts();
-        loadProjects();
-    })
+        <section class="contacts-card">
+            <h3>Contacts</h3>
 
-    function showCreateProjectForm() {
-        $("#createProjectForm").show();
-    }
+            <div id="contactsContainer"></div>
 
-    function hideCreateProjectForm() {
-        $("#createProjectForm").hide();
-        $("#createProjectResult").text("");
-    }
+            <p id="contactsEmpty" style="display:none;">
+                No contacts
+            </p>
 
-    function createProject() {
-        const formData = new FormData();
-        formData.append("title", $("#projectTitle").val());
-        formData.append("shortDescription", $("#projectShortDesc").val());
-        formData.append("fullDescription", $("#projectFullDesc").val());
-        formData.append("projectLink", $("#projectLink").val());
-        formData.append("isVisible", $("#projectIsVisible").is(":checked"));
+            <a href="/profile/edit" class="manage-link">
+                Manage Contacts
+            </a>
+        </section>
 
-        const previewFile = $("#projectPreview")[0].files[0];
-        if (previewFile) {
-            formData.append("preview", previewFile);
-        }
+    </aside>
 
-        $.ajax({
-            url: "/api/v1/portfolios/me/projects/with-preview",
-            method: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            dataType: "json",
-            success: function () {
-                $("#projectTitle").val("");
-                $("#projectShortDesc").val("");
-                $("#projectFullDesc").val("");
-                $("#projectLink").val("");
-                $("#projectPreview").val("");
-                hideCreateProjectForm();
-                loadProjects();
-            },
-            error: function (err) {
-                showError("createProjectResult", err);
-            }
-        });
-    }
+    <section class="content-area">
 
-    function loadProjects() {
-        $.ajax({
-            url: "/api/v1/portfolios/me",
-            method: "GET",
-            success: function (portfolio) {
-                const container = $("#projectsContainer");
-                container.empty();
+        <div id="createProjectForm" class="project-form">
 
-                if (!portfolio.projects || portfolio.projects.length === 0) {
-                    $("#noProjects").show();
-                    return;
-                }
+            <h3>Create Project</h3>
 
-                $("#noProjects").hide();
-                const sortedProjects = [...portfolio.projects].sort((a, b) => {
-                    if (!a.createdAt && !b.createdAt) return 0;
-                    if (!a.createdAt) return 1;
-                    if (!b.createdAt) return -1;
-                    return new Date(b.createdAt) - new Date(a.createdAt);
-                });
-                sortedProjects.forEach(project => {
-                    let card = `<div style="border:1px solid #ccc; padding:15px; width:250px; border-radius:8px;">
-                        <a href="/project/${project.projectId}?portfolioId=${portfolio.portfolioId}" style="text-decoration:none; color:inherit;">
-                            ${project.preview ? `<img src="/api/v1/projects/${project.projectId}/preview?portfolioId=${portfolio.portfolioId}" style="max-width:100%; max-height:150px; border-radius:4px; margin-bottom:10px;"/>` : ''}
-                            <h4 style="margin:5px 0;">${project.title}</h4>
-                            <p style="font-size:14px; color:#666;">${project.shortDescription || ''}</p>
-                        </a>
-                        <div style="margin-top:10px;">
-                            <button onclick="editProject(${project.projectId}, '${portfolio.portfolioId}')">Edit</button>
-                            <button onclick="deleteProject(${project.projectId}, ${portfolio.portfolioId})">Delete</button>
-                            ${project.isVisible
-                        ? `<button onclick="toggleProjectVisibility(${project.projectId}, ${portfolio.portfolioId}, false)">Hide</button>`
-                        : `<button onclick="toggleProjectVisibility(${project.projectId}, ${portfolio.portfolioId}, true)">Show</button>`
-                    }
-                        </div>
-                    </div>`;
-                    container.append(card);
-                });
-            }
-        });
-    }
+            <input type="text"
+                   id="projectTitle"
+                   placeholder="Project title">
 
-    function editProject(projectId, portfolioId) {
-        window.location.href = "/project/" + projectId + "?portfolioId=" + portfolioId;
-    }
+            <textarea id="projectShortDesc"
+                      placeholder="Short description"></textarea>
 
-    function deleteProject(projectId, portfolioId) {
-        if (!confirm("Delete this project?")) return;
+            <textarea id="projectFullDesc"
+                      placeholder="Full description"></textarea>
 
-        $.ajax({
-            url: "/api/v1/projects/" + projectId + "?portfolioId=" + portfolioId,
-            method: "DELETE",
-            success: function () {
-                loadProjects();
-            },
-            error: function (err) {
-                showErrorMessage(err);
-            }
-        });
-    }
+            <input type="text"
+                   id="projectLink"
+                   placeholder="Project link">
 
-    function showErrorMessage(err) {
-        let message = err.responseText;
-        try {
-            const json = JSON.parse(err.responseText);
-            message = json.message || json.errorCode || err.responseText;
-        } catch (e) {}
-        alert(message);
-    }
+            <input type="file"
+                   id="projectPreview"
+                   accept="image/*">
 
-    function toggleProjectVisibility(projectId, portfolioId, isVisible) {
-        $.ajax({
-            url: "/api/v1/projects/" + projectId + "/visibility?portfolioId=" + portfolioId + "&isVisible=" + isVisible,
-            method: "PATCH",
-            success: function () {
-                loadProjects();
-            },
-            error: function (err) {
-                alert(err.responseText);
-            }
-        });
-    }
+            <label class="checkbox-row">
+                <input type="checkbox"
+                       id="projectIsVisible"
+                       checked>
+                Visible
+            </label>
 
-    $(document).ready(function () {
-        loadContacts();
-        loadProjects();
-    })
+            <div class="form-actions">
+                <button class="primary-btn"
+                        onclick="createProject()">
+                    Create
+                </button>
+
+                <button class="secondary-btn"
+                        onclick="hideCreateProjectForm()">
+                    Cancel
+                </button>
+            </div>
+
+            <p id="createProjectResult"></p>
+
+        </div>
+
+        <div id="projectsContainer" class="projects-grid"></div>
+
+        <p id="noProjects" class="empty-state">
+            No projects yet
+        </p>
+
+    </section>
+
+</main>
+
+<script th:inline="javascript">
+
+    window.portfolioData = {
+        isPublic: [[${portfolio.isPublic}]]
+    };
 
 </script>
+
+<script src="/js/profile.js"></script>
 
 </body>
 </html>

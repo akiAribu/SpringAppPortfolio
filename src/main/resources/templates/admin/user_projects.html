@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - User Projects</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --primary: #111827;
+            --primary-hover: #1f2937;
+            --danger: #ef4444;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --radius: 20px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Inter, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 40px;
+        }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+        .topbar h1 { font-size: 28px; font-weight: 700; }
+        .back-link {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover { text-decoration: underline; }
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            text-align: left;
+            padding: 16px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+            background: #f9fafb;
+        }
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f9fafb; }
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s ease;
+        }
+        .btn-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .btn-danger:hover { background: #fecaca; }
+        .loading, .error {
+            padding: 40px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 16px;
+        }
+        .error { color: var(--danger); }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        .toast-success { background: #d1fae5; color: #065f46; }
+        .toast-error { background: #fee2e2; color: #991b1b; }
+        .project-desc {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <h1 id="pageTitle">User Projects</h1>
+    <a href="/admin/admin_panel" class="back-link">&larr; Back to Users</a>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<div class="card">
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Owner</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="projectsTableBody">
+        <tr><td colspan="6" class="loading">Loading projects...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    var userId = window.location.pathname.split('/')[3];
+
+    function showToast(message, type) {
+        const toast = $('#toast');
+        toast.removeClass('toast-success toast-error').addClass('toast-' + type).text(message).fadeIn(200);
+        setTimeout(() => toast.fadeOut(200), 3000);
+    }
+
+    function formatDate(isoString) {
+        if (!isoString) return '-';
+        const d = new Date(isoString);
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function loadProjects() {
+        $.ajax({
+            url: '/api/v1/admin/users/' + userId + '/projects',
+            method: 'GET',
+            success: function(projects) {
+                if (!Array.isArray(projects)) {
+                    $('#projectsTableBody').html('<tr><td colspan="6" class="error">Invalid response</td></tr>');
+                    return;
+                }
+                if (projects.length === 0) {
+                    $('#projectsTableBody').html('<tr><td colspan="6" class="loading">No projects found</td></tr>');
+                    return;
+                }
+                var html = '';
+                projects.forEach(function(p) {
+                    var desc = p.shortDescription ? p.shortDescription : '-';
+                    html += '<tr data-project-id="' + p.id + '">';
+                    html += '<td>' + p.id + '</td>';
+                    html += '<td>' + $('<span>').text(p.title).html() + '</td>';
+                    html += '<td class="project-desc" title="' + $('<span>').text(desc).html() + '">' + $('<span>').text(desc).html() + '</td>';
+                    html += '<td>' + $('<span>').text(p.ownerUsername).html() + '</td>';
+                    html += '<td>' + formatDate(p.createdAt) + '</td>';
+                    html += '<td><button class="btn btn-danger delete-project-btn">Delete</button></td>';
+                    html += '</tr>';
+                });
+                $('#projectsTableBody').html(html);
+            },
+            error: function(xhr, status, err) {
+                console.error('Projects error:', status, err, xhr.responseText);
+                $('#projectsTableBody').html('<tr><td colspan="6" class="error">Failed to load projects</td></tr>');
+            }
+        });
+    }
+
+    $(document).on('click', '.delete-project-btn', function() {
+        if (!confirm('Delete this project? This action cannot be undone.')) return;
+        var row = $(this).closest('tr');
+        var projectId = row.data('project-id');
+
+        $.ajax({
+            url: '/api/v1/admin/projects/' + projectId,
+            method: 'DELETE',
+            success: function() {
+                showToast('Project deleted', 'success');
+                row.remove();
+            },
+            error: function(xhr) {
+                var msg = 'Failed to delete project';
+                if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                showToast(msg, 'error');
+            }
+        });
+    });
+
+    loadProjects();
+</script>
+
+</body>
+</html>

@@ -1,8 +1,7 @@
-package org.example.springappportfolio.controllers.api.user;
+package org.example.springappportfolio.controllers.api.project;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.example.springappportfolio.dto.*;
 import org.example.springappportfolio.exceptions.AccessDeniedException;
 import org.example.springappportfolio.exceptions.ValidationException;
@@ -31,7 +30,7 @@ public class ProjectApiController {
             Authentication authentication
     ) {
 
-        boolean isOwner = securityService.isOwner(portfolioId, authentication);
+        boolean isOwner = securityService.isOwner(portfolioId, authentication) || securityService.isAdmin(authentication);
 
         return ResponseEntity.ok(
                 projectService.getPortfolioProjects(portfolioId, isOwner)
@@ -46,7 +45,7 @@ public class ProjectApiController {
             Authentication authentication
     ) {
 
-        boolean isOwner = securityService.isOwner(portfolioId, authentication);
+        boolean isOwner = securityService.isOwner(portfolioId, authentication) || securityService.isAdmin(authentication);
 
         return ResponseEntity.ok(
                 projectService.getProjectById(projectId, portfolioId, isOwner)

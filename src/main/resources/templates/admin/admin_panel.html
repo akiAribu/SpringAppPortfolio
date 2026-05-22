@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Users</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        :root {
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --primary: #111827;
+            --primary-hover: #1f2937;
+            --danger: #ef4444;
+            --success: #10b981;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --radius: 20px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Inter, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 40px;
+        }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+        .topbar h1 { font-size: 28px; font-weight: 700; }
+        .back-link {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover { text-decoration: underline; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .stat-card .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .stat-card .stat-label {
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            text-align: left;
+            padding: 16px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+            background: #f9fafb;
+        }
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f9fafb; }
+        select {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 13px;
+            background: white;
+        }
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s ease;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .btn-danger:hover { background: #fecaca; }
+        .btn-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .btn-success:hover { background: #a7f3d0; }
+        .actions { display: flex; gap: 8px; align-items: center; }
+        .loading, .error {
+            padding: 40px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 16px;
+        }
+        .error { color: var(--danger); }
+        .role-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .role-admin { background: #fee2e2; color: #991b1b; }
+        .role-user { background: #dbeafe; color: #1e40af; }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        .toast-success { background: #d1fae5; color: #065f46; }
+        .toast-error { background: #fee2e2; color: #991b1b; }
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white;
+            border-radius: var(--radius);
+            padding: 32px;
+            max-width: 440px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .modal h3 { font-size: 20px; margin-bottom: 12px; }
+        .modal p { color: var(--muted); line-height: 1.6; margin-bottom: 24px; font-size: 14px; }
+        .modal .btn-group { display: flex; gap: 12px; justify-content: flex-end; }
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .search-wrapper input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            font-size: 15px;
+            background: var(--card);
+            outline: none;
+        }
+        .search-wrapper input:focus {
+            border-color: var(--primary);
+        }
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            z-index: 50;
+            display: none;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+        .autocomplete-list.active { display: block; }
+        .autocomplete-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background: #f3f4f6; }
+        .autocomplete-item .ac-username { font-weight: 600; }
+        .autocomplete-item .ac-email { color: var(--muted); font-size: 13px; }
+        .search-clear {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--muted);
+            display: none;
+        }
+        .search-clear:hover { color: var(--text); }
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+        .pagination button {
+            border: 1px solid var(--border);
+            background: var(--card);
+            border-radius: 10px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: 0.2s ease;
+        }
+        .pagination button:hover:not(:disabled) { background: #f3f4f6; }
+        .pagination button:disabled { opacity: 0.4; cursor: default; }
+        .pagination button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .pagination .page-info {
+            color: var(--muted);
+            font-size: 13px;
+            margin-left: 12px;
+        }
+        .username-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .username-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <h1>Admin Panel</h1>
+    <a href="/profile" class="back-link">&larr; Back to Portfolio</a>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal">
+        <h3>Delete User</h3>
+        <p>
+            Are you sure you want to delete user <strong id="deleteModalUsername"></strong>?
+            This will permanently remove the user along with all related data:
+            portfolio, projects, project images, contacts, and tags.
+            This action cannot be undone.
+        </p>
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="closeDeleteModal()">Cancel</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid" id="statsContainer">
+    <div class="stat-card">
+        <div class="stat-value" id="statUsers">-</div>
+        <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" id="statProjects">-</div>
+        <div class="stat-label">Total Projects</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" id="statPublic">-</div>
+        <div class="stat-label">Public Portfolios</div>
+    </div>
+</div>
+
+<div class="search-wrapper">
+    <input type="text" id="searchInput" placeholder="Search users by username..." autocomplete="off">
+    <button class="search-clear" id="searchClear">&times;</button>
+    <div class="autocomplete-list" id="autocompleteList"></div>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="usersTableBody">
+        <tr><td colspan="6" class="loading">Loading users...</td></tr>
+        </tbody>
+    </table>
+    <div class="pagination" id="pagination"></div>
+</div>
+
+<script>
+    let deleteTargetId = null;
+
+    function showToast(message, type) {
+        const toast = $('#toast');
+        toast.removeClass('toast-success toast-error').addClass('toast-' + type).text(message).fadeIn(200);
+        setTimeout(() => toast.fadeOut(200), 3000);
+    }
+
+    function openDeleteModal(userId, username) {
+        deleteTargetId = userId;
+        $('#deleteModalUsername').text(username);
+        $('#deleteModal').addClass('active');
+    }
+
+    function closeDeleteModal() {
+        deleteTargetId = null;
+        $('#deleteModal').removeClass('active');
+    }
+
+    function formatDate(isoString) {
+        if (!isoString) return '-';
+        const d = new Date(isoString);
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function roleBadgeHtml(role) {
+        const cls = role === 'ROLE_ADMIN' ? 'role-admin' : 'role-user';
+        const label = role === 'ROLE_ADMIN' ? 'Admin' : 'User';
+        return '<span class="role-badge ' + cls + '">' + label + '</span>';
+    }
+
+    function loadStats() {
+        $.ajax({
+            url: '/api/v1/admin/stats',
+            method: 'GET',
+            success: function(stats) {
+                $('#statUsers').text(stats.totalUsers);
+                $('#statProjects').text(stats.totalProjects);
+                $('#statPublic').text(stats.publicPortfolios);
+            },
+            error: function(xhr, status, err) {
+                console.error('Stats error:', status, err, xhr.responseText);
+                $('#statUsers').text('Error');
+                $('#statProjects').text('Error');
+                $('#statPublic').text('Error');
+            }
+        });
+    }
+
+    var currentPage = 0;
+
+    function loadUsers(page) {
+        page = page || 0;
+        currentPage = page;
+        $.ajax({
+            url: '/api/v1/admin/users',
+            method: 'GET',
+            data: { page: page, size: 10 },
+            success: function(response) {
+                renderUsers(response);
+                renderPagination(response);
+            },
+            error: function(xhr, status, err) {
+                console.error('Users error:', status, err, xhr.responseText);
+                $('#usersTableBody').html('<tr><td colspan="6" class="error">Failed to load users</td></tr>');
+            }
+        });
+    }
+
+    function renderUsers(response) {
+        var users = response.content;
+        if (!Array.isArray(users)) {
+            $('#usersTableBody').html('<tr><td colspan="6" class="error">Invalid response from server</td></tr>');
+            return;
+        }
+        if (users.length === 0) {
+            $('#usersTableBody').html('<tr><td colspan="6" class="loading">No users found</td></tr>');
+            return;
+        }
+        var html = '';
+        users.forEach(function(u) {
+            html += '<tr data-user-id="' + u.id + '">';
+            html += '<td>' + u.id + '</td>';
+            html += '<td><a href="/admin/users/' + u.id + '/projects" class="username-link">' + $('<span>').text(u.username).html() + '</a></td>';
+            html += '<td>' + $('<span>').text(u.email).html() + '</td>';
+            html += '<td class="role-cell">' + roleBadgeHtml(u.role) + '</td>';
+            html += '<td>' + formatDate(u.createdAt) + '</td>';
+            html += '<td class="actions">';
+            html += '<select class="role-select">';
+            html += '<option value="ROLE_USER"' + (u.role === 'ROLE_USER' ? ' selected' : '') + '>User</option>';
+            html += '<option value="ROLE_ADMIN"' + (u.role === 'ROLE_ADMIN' ? ' selected' : '') + '>Admin</option>';
+            html += '</select>';
+            html += '<button class="btn btn-success save-role-btn">Save</button>';
+            html += '<button class="btn btn-danger delete-user-btn">Delete</button>';
+            html += '</td>';
+            html += '</tr>';
+        });
+        $('#usersTableBody').html(html);
+    }
+
+    function renderPagination(response) {
+        var container = $('#pagination');
+        container.empty();
+        if (response.totalPages <= 1) return;
+        container.append(
+            '<button onclick="loadUsers(' + (response.page - 1) + ')"' + (!response.hasPrevious ? ' disabled' : '') + '>Previous</button>'
+        );
+        for (var i = 0; i < response.totalPages; i++) {
+            container.append(
+                '<button class="' + (i === response.page ? 'active' : '') + '" onclick="loadUsers(' + i + ')">' + (i + 1) + '</button>'
+            );
+        }
+        container.append(
+            '<button onclick="loadUsers(' + (response.page + 1) + ')"' + (!response.hasNext ? ' disabled' : '') + '>Next</button>'
+        );
+        container.append(
+            '<span class="page-info">Page ' + (response.page + 1) + ' of ' + response.totalPages + ' (' + response.totalElements + ' total)</span>'
+        );
+    }
+
+    var searchTimer = null;
+
+    $('#searchInput').on('input', function() {
+        var val = $(this).val().trim();
+        if (val.length === 0) {
+            $('#autocompleteList').removeClass('active');
+            $('#searchClear').hide();
+            $('#pagination').show();
+            loadUsers(0);
+            return;
+        }
+        $('#searchClear').show();
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function() {
+            $.ajax({
+                url: '/api/v1/admin/users/search',
+                method: 'GET',
+                data: { q: val },
+                success: function(results) {
+                    var list = $('#autocompleteList').empty();
+                    if (!Array.isArray(results) || results.length === 0) {
+                        list.removeClass('active');
+                        return;
+                    }
+                    results.forEach(function(u) {
+                        var item = $('<div class="autocomplete-item">');
+                        item.append('<span class="ac-username">' + $('<span>').text(u.username).html() + '</span>');
+                        item.append('<span class="ac-email">' + $('<span>').text(u.email).html() + '</span>');
+                        item.data('user', u);
+                        item.on('click', function() {
+                            $('#searchInput').val(u.username);
+                            $('#autocompleteList').removeClass('active');
+                            $('#pagination').hide();
+                            renderUsers({content: [u]});
+                        });
+                        list.append(item);
+                    });
+                    list.addClass('active');
+                }
+            });
+        }, 200);
+    });
+
+    $('#searchInput').on('blur', function() {
+        setTimeout(function() { $('#autocompleteList').removeClass('active'); }, 200);
+    });
+
+    $('#searchInput').on('focus', function() {
+        if ($('#autocompleteList').children().length > 0) {
+            $('#autocompleteList').addClass('active');
+        }
+    });
+
+    $('#searchClear').on('click', function() {
+        $('#searchInput').val('').trigger('input');
+        $('#autocompleteList').removeClass('active');
+        $('#pagination').show();
+        $(this).hide();
+        loadUsers(0);
+    });
+
+    $(document).on('click', '.save-role-btn', function() {
+        var row = $(this).closest('tr');
+        var userId = row.data('user-id');
+        var role = row.find('.role-select').val();
+
+        $.ajax({
+            url: '/api/v1/admin/users/' + userId + '/role',
+            method: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify({ role: role }),
+            success: function() {
+                showToast('Role updated successfully', 'success');
+                var badgeHtml = role === 'ROLE_ADMIN'
+                    ? '<span class="role-badge role-admin">Admin</span>'
+                    : '<span class="role-badge role-user">User</span>';
+                row.find('.role-cell').html(badgeHtml);
+                row.find('.role-select').val(role);
+            },
+            error: function(xhr) {
+                var msg = 'Failed to update role';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    msg = xhr.responseJSON.message;
+                }
+                showToast(msg, 'error');
+            }
+        });
+    });
+
+    $(document).on('click', '.delete-user-btn', function() {
+        var row = $(this).closest('tr');
+        var userId = row.data('user-id');
+        var username = row.find('td:nth-child(2)').text();
+        openDeleteModal(userId, username);
+    });
+
+    $('#confirmDeleteBtn').on('click', function() {
+        if (deleteTargetId === null) return;
+        var userId = deleteTargetId;
+
+        $.ajax({
+            url: '/api/v1/admin/users/' + userId,
+            method: 'DELETE',
+            success: function() {
+                showToast('User deleted successfully', 'success');
+                $('tr[data-user-id="' + userId + '"]').remove();
+                loadStats();
+                closeDeleteModal();
+            },
+            error: function(xhr) {
+                var msg = 'Failed to delete user';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    msg = xhr.responseJSON.message;
+                }
+                showToast(msg, 'error');
+                closeDeleteModal();
+            }
+        });
+    });
+
+    $('#deleteModal').on('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape') closeDeleteModal();
+    });
+
+    loadStats();
+    loadUsers(0);
+</script>
+
+</body>
+</html>

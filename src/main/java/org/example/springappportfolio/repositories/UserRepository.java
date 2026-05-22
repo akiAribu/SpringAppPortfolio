@@ -1,5 +1,6 @@
 package org.example.springappportfolio.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.example.springappportfolio.models.User;
@@ -12,6 +13,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
 
     Optional<User> findByEmail(String email);
+
+    List<User> findByUsernameContainingIgnoreCase(String username);
 
     @Query("""
         SELECT u 

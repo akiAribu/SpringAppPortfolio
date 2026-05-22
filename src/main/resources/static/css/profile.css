@@ -199,6 +199,19 @@ body {
     resize: vertical;
 }
 
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    cursor: pointer;
+}
+
+.checkbox-row input[type="checkbox"] {
+    width: auto;
+    margin-bottom: 0;
+}
+
 .projects-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

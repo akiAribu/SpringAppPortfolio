@@ -30,4 +30,11 @@ public interface PortfolioRepository extends JpaRepository<Portfolio, Long>, Jpa
         ORDER BY c.displayOrder ASC
     """)
     List<Contact> findContactsByPortfolioId(Long portfolioId);
+
+    @Query("""
+        SELECT COUNT(p)
+        FROM Portfolio p 
+        WHERE p.isPublic = true
+    """)
+    long countPublicPortfolios();
 }

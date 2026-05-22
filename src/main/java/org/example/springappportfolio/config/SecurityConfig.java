@@ -49,6 +49,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/profile", "/api/v1/portfolios/me/**","/api/v1/contacts/**", "/api/v1/projects/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider(userDetailsService))

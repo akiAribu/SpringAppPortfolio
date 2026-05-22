@@ -168,6 +168,13 @@ public class ProjectService {
     }
 
     @Transactional
+    public void deleteAsAdmin(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new NotFoundException("Project", projectId));
+        projectRepository.delete(project);
+    }
+
+    @Transactional
     public ProjectDto updateProjectVisibility(Long portfolioId, Long projectId, boolean isVisible, boolean isOwner) {
 
         validateOwnership(isOwner);

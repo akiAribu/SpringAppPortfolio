@@ -7,6 +7,7 @@ import org.example.springappportfolio.models.User;
 import org.example.springappportfolio.repositories.PortfolioRepository;
 import org.example.springappportfolio.repositories.UserRepository;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,6 +16,18 @@ public class SecurityService {
 
     private final PortfolioRepository portfolioRepository;
     private final UserRepository userRepository;
+
+    public boolean isAdmin(Authentication authentication) {
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_ADMIN"::equals);
+
+    }
 
     public boolean isOwner(Long portfolioId, Authentication authentication) {
 
@@ -30,22 +43,6 @@ public class SecurityService {
                                 .getId()
                                 .equals(currentUserId))
                 .orElse(false);
-
-//        if (authentication == null || !authentication.isAuthenticated()) {
-//            return false;
-//        }
-//
-//        UserPrincipal principal = getUserPrincipal(authentication);
-//        if (principal == null) {
-//            return false;
-//        }
-//
-//        Portfolio portfolio = portfolioRepository.findById(portfolioId).orElse(null);
-//        if(portfolio == null){
-//            return false;
-//        }
-//
-//        return portfolio.getUser().getId().equals(principal.getId());
     }
 
     public boolean isOwnerByUserId(Long userId, Authentication authentication) {
@@ -54,17 +51,6 @@ public class SecurityService {
 
         return currentUserId != null &&
                 currentUserId.equals(userId);
-
-//        if (authentication == null || !authentication.isAuthenticated()) {
-//            return false;
-//        }
-//
-//        UserPrincipal principal = getUserPrincipal(authentication);
-//        if (principal == null) {
-//            return false;
-//        }
-//
-//        return principal.getId().equals(userId);
     }
 
     public boolean canAccessPortfolio(Long portfolioId, Authentication authentication) {
@@ -72,20 +58,9 @@ public class SecurityService {
         return portfolioRepository.findById(portfolioId)
                 .map(portfolio ->
                         isOwner(portfolioId, authentication) ||
-                        Boolean.TRUE.equals(portfolio.getIsPublic()))
+                        Boolean.TRUE.equals(portfolio.getIsPublic()) ||
+                        isAdmin(authentication))
                 .orElse(false);
-
-//        Portfolio portfolio = portfolioRepository.findById(portfolioId).orElse(null);
-//        if (portfolio == null){
-//            return false;
-//        }
-//
-//        if (isOwner(portfolioId, authentication)) {
-//            return true;
-//        }
-//
-//        return portfolio.getIsPublic() != null && portfolio.getIsPublic();
-
     }
 
     public boolean canAccessUserPortfolio(Long userId, Authentication authentication) {
@@ -100,14 +75,8 @@ public class SecurityService {
         Portfolio portfolio = user.getPortfolio();
 
         return isOwnerByUserId(userId, authentication) ||
-                Boolean.TRUE.equals(portfolio.getIsPublic());
-
-        //        User user = userRepository.findById(userId).orElse(null);
-//        if (user == null || user.getPortfolio() == null) {
-//            return false;
-//        }
-//
-//        return canAccessPortfolio(user.getPortfolio().getId(), authentication);
+                Boolean.TRUE.equals(portfolio.getIsPublic() ||
+                        isAdmin(authentication));
     }
 
     public Long getCurrentUserId(Authentication authentication) {

@@ -87,7 +87,7 @@ public class PortfolioPageController {
             Authentication authentication,
             Model model
     ) {
-        boolean isOwner = securityService.isOwner(portfolioId, authentication);
+        boolean isOwner = securityService.isOwner(portfolioId, authentication) || securityService.isAdmin(authentication);
 
         ProjectDto project = projectService.getProjectById(projectId, portfolioId, isOwner);
         List<byte[]> images = projectService.getProjectImages(projectId, portfolioId, isOwner);

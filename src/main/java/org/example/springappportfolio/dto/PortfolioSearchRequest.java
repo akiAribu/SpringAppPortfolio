@@ -12,7 +12,8 @@ public record PortfolioSearchRequest(
    List<Specialization> specializations,
    List<String> experienceRanges,
    Integer page,
-   Integer size
+   Integer size,
+   String q
 ) {
     public PortfolioSearchRequest {
         if (page == null) page = 0;

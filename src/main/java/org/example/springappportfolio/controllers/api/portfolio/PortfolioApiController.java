@@ -1,10 +1,9 @@
-package org.example.springappportfolio.controllers.api.user;
+package org.example.springappportfolio.controllers.api.portfolio;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.springappportfolio.dto.*;
 import org.example.springappportfolio.models.Specialization;
-import org.example.springappportfolio.repositories.UserRepository;
 import org.example.springappportfolio.services.ContactService;
 import org.example.springappportfolio.services.PortfolioService;
 import org.example.springappportfolio.services.SecurityService;
@@ -12,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -90,7 +90,15 @@ public class PortfolioApiController {
     ) {
 
         PortfolioSearchRequest request = new PortfolioSearchRequest(
-                specialization, minExperience, maxExperience, tags, null, null, null, null
+                specialization,
+                minExperience,
+                maxExperience,
+                tags,
+                null,
+                null,
+                null,
+                null,
+                null
         );
 
         return ResponseEntity.ok(
@@ -98,6 +106,16 @@ public class PortfolioApiController {
         );
 
     }
+
+    @GetMapping("/specializations")
+    public ResponseEntity<List<SpecializationDto>> getAllSpecializations() {
+        List<SpecializationDto> specializations = Arrays.stream(Specialization.values())
+                .map(SpecializationDto::from)
+                .toList();
+
+        return ResponseEntity.ok(specializations);
+    }
+
 
     @PostMapping("/contacts")
     public ResponseEntity<Void> createContact(

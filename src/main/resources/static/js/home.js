@@ -3,6 +3,8 @@ let selectedExperience = [];
 let selectedTags = [];
 let allSpecializations = [];
 let currentPage = 0;
+let searchQuery = '';
+let searchTimer = null;
 
 $(document).ready(function () {
     loadSpecializations();
@@ -60,6 +62,9 @@ function loadPortfolios(page = 0) {
     }
     if (selectedTags.length > 0) {
         params += "&" + selectedTags.map(t => "tags=" + t).join("&");
+    }
+    if (searchQuery) {
+        params += "&q=" + encodeURIComponent(searchQuery);
     }
 
     $.ajax({
@@ -198,4 +203,12 @@ $(document).click(function (e) {
     if (!$(e.target).closest('.filter-dropdown').length) {
         $("#filterContent").removeClass("show");
     }
+});
+
+$('#searchInput').on('input', function() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function() {
+        searchQuery = $('#searchInput').val().trim();
+        loadPortfolios(0);
+    }, 300);
 });

@@ -84,6 +84,23 @@ public class PortfolioSpecifications {
 
     }
 
+    public static Specification<Portfolio> hasNameContaining(String query) {
+        if (query == null || query.isBlank()) {
+            return null;
+        }
+
+        return (root, cbQuery, cb) -> {
+            cbQuery.distinct(true);
+            Join<Portfolio, User> user = root.join("user");
+            String pattern = "%" +  query.toLowerCase() + "%";
+            return cb.or(
+                    cb.like(cb.lower(user.get("username")), pattern),
+                    cb.like(cb.lower(user.get("firstName")), pattern),
+                    cb.like(cb.lower(user.get("lastName")), pattern)
+            );
+        };
+    }
+
     public static Specification<Portfolio> hasExperienceInRanges(List<String> ranges) {
         if (ranges == null || ranges.isEmpty()) {
             return null;

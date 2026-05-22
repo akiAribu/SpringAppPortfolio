@@ -143,6 +143,10 @@ public class PortfolioService {
             spec = spec.and(PortfolioSpecifications.hasAnyTag(request.tags()));
         }
 
+        if (request.q() != null && !request.q().isBlank()) {
+            spec = spec.and(PortfolioSpecifications.hasNameContaining(request.q()));
+        }
+
         int page = request.page() != null ? request.page() : 0;
         int size = request.size() != null ? request.size() : 8;
 
@@ -195,6 +199,9 @@ public class PortfolioService {
             spec = spec.and(PortfolioSpecifications.hasAnyTag(request.tags()));
         }
 
+        if (request.q() != null && !request.q().isBlank()) {
+            spec = spec.and(PortfolioSpecifications.hasNameContaining(request.q()));
+        }
 
         List<Portfolio> portfolios = portfolioRepository.findAll(spec);
 

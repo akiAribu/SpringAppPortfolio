@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
-public class HomeController {
+public class HomePageController {
 
     private final PortfolioService portfolioService;
     private final TagRepository tagRepository;
@@ -35,7 +35,8 @@ public class HomeController {
             @RequestParam(required = false) List<String> specializations,
             @RequestParam(required = false) List<String> experience,
             @RequestParam(required = false) List<String> tags,
-            @RequestParam(defaultValue = "0") Integer page
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(required = false) String q
     ) {
         List<Specialization> specEnums = null;
         if (specializations != null && !specializations.isEmpty()) {
@@ -59,7 +60,8 @@ public class HomeController {
                 specEnums,
                 experience,
                 page,
-                8
+                8,
+                q
         );
 
         PortfolioPageResponse response = portfolioService.searchPortfoliosPaginated(request);
